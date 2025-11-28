@@ -1,0 +1,616 @@
+﻿Initialized native services in: C:\Users\qw\.gradle\native
+Initialized jansi services in: C:\Users\qw\.gradle\native
+Found daemon DaemonInfo{pid=5908, address=[c98942ed-b34f-4ff1-b47c-7fdff2208834 port:64184, addresses:[/127.0.0.1]], state=Idle, lastBusy=1764297016227, context=DefaultDaemonContext[uid=59a55689-36a3-496c-8096-5dac5570394c,javaHome=C:\Program Files\Java\jdk-17,javaVersion=17,javaVendor=Oracle Corporation,daemonRegistryDir=C:\Users\qw\.gradle\daemon,pid=5908,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=512m,-Xmx2048m,-Dfile.encoding=UTF-8,-Duser.country=TR,-Duser.language=tr,-Duser.variant]} however its context does not match the desired criteria.
+At least one daemon option is different.
+Wanted: DaemonRequestContext{jvmCriteria=C:\Program Files\Java\jdk-17 (no JDK specified, using current Java home), daemonOpts=[-XX:MaxMetaspaceSize=512m, -Xmx2048m, -Dfile.encoding=windows-1254, -Duser.country=TR, -Duser.language=tr, -Duser.variant], applyInstrumentationAgent=true, nativeServicesMode=ENABLED, priority=NORMAL}
+Actual: DefaultDaemonContext[uid=59a55689-36a3-496c-8096-5dac5570394c,javaHome=C:\Program Files\Java\jdk-17,javaVersion=17,javaVendor=Oracle Corporation,daemonRegistryDir=C:\Users\qw\.gradle\daemon,pid=5908,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=512m,-Xmx2048m,-Dfile.encoding=UTF-8,-Duser.country=TR,-Duser.language=tr,-Duser.variant]
+
+  Looking for a different daemon...
+Found daemon DaemonInfo{pid=4496, address=[080e5b6e-6a2e-4c6d-9726-b04bfaa0c333 port:64219, addresses:[/127.0.0.1]], state=Idle, lastBusy=1764297028328, context=DefaultDaemonContext[uid=6876e2db-e9c0-4f95-ac05-669155d5ac73,javaHome=C:\Program Files\Android\Android Studio\jbr,javaVersion=21,javaVendor=JetBrains s.r.o.,daemonRegistryDir=C:\Users\qw\.gradle\daemon,pid=4496,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=512m,-Xmx2048m,-Dfile.encoding=UTF-8,-Duser.country=TR,-Duser.language=tr,-Duser.variant]} however its context does not match the desired criteria.
+JVM is incompatible.
+Wanted: DaemonRequestContext{jvmCriteria=C:\Program Files\Java\jdk-17 (no JDK specified, using current Java home), daemonOpts=[-XX:MaxMetaspaceSize=512m, -Xmx2048m, -Dfile.encoding=windows-1254, -Duser.country=TR, -Duser.language=tr, -Duser.variant], applyInstrumentationAgent=true, nativeServicesMode=ENABLED, priority=NORMAL}
+Actual: DefaultDaemonContext[uid=6876e2db-e9c0-4f95-ac05-669155d5ac73,javaHome=C:\Program Files\Android\Android Studio\jbr,javaVersion=21,javaVendor=JetBrains s.r.o.,daemonRegistryDir=C:\Users\qw\.gradle\daemon,pid=4496,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=512m,-Xmx2048m,-Dfile.encoding=UTF-8,-Duser.country=TR,-Duser.language=tr,-Duser.variant]
+
+  Looking for a different daemon...
+The client will now receive all logging from the daemon (pid: 11744). The daemon log file: C:\Users\qw\.gradle\daemon\8.12\daemon-11744.out.log
+Starting 3rd build in daemon [uptime: 43.33 secs, performance: 100%, GC rate: 0.00/s, heap usage: 0% of 2 GiB, non-heap usage: 23% of 512 MiB]
+Using 16 worker leases.
+Now considering [C:\Users\qw\Desktop\PosPro\pos_pro_tr\android, C:\tools\flutter\packages\flutter_tools\gradle] as hierarchies to watch
+Watching the file system is configured to be enabled if available
+File system watching is active
+Starting Build
+Now considering [C:\tools\flutter\packages\flutter_tools\gradle, C:\Users\qw\Desktop\PosPro\pos_pro_tr\android] as hierarchies to watch
+
+> Configure project :gradle
+Evaluating project ':gradle' using build file 'C:\tools\flutter\packages\flutter_tools\gradle\build.gradle.kts'.
+Resolved plugin [id: 'org.gradle.java-gradle-plugin']
+Resolved plugin [id: 'org.gradle.groovy']
+Resolved plugin [id: 'org.gradle.kotlin.kotlin-dsl', version: '5.1.2']
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm', version: '1.9.20']
+Using Kotlin Gradle Plugin gradle85 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+file or directory 'C:\tools\flutter\packages\flutter_tools\gradle\src\main\java', not found
+Resolved plugin [id: 'dev.flutter.flutter-plugin-loader', version: '1.0.0']
+Resolved plugin [id: 'com.android.application', version: '8.7.3', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.android', version: '2.1.0', apply: false]
+Resolve mutations for :gradle:checkKotlinGradlePluginConfigurationErrors (Thread[Execution worker,5,main]) started.
+:gradle:checkKotlinGradlePluginConfigurationErrors (Thread[Execution worker,5,main]) started.
+
+> Task :gradle:checkKotlinGradlePluginConfigurationErrors SKIPPED
+Skipping task ':gradle:checkKotlinGradlePluginConfigurationErrors' as task onlyIf 'errorDiagnostics are present' is false.
+Resolve mutations for :gradle:compileKotlin (Thread[included builds,5,main]) started.
+:gradle:compileKotlin (Thread[included builds,5,main]) started.
+
+> Task :gradle:compileKotlin UP-TO-DATE
+Caching disabled for task ':gradle:compileKotlin' because:
+  Build cache is disabled
+Skipping task ':gradle:compileKotlin' as it is up-to-date.
+Resolve mutations for :gradle:compileJava (Thread[Execution worker Thread 4,5,main]) started.
+:gradle:compileJava (Thread[Execution worker Thread 4,5,main]) started.
+
+> Task :gradle:compileJava NO-SOURCE
+Skipping task ':gradle:compileJava' as it has no source files and no previous output files.
+Resolve mutations for :gradle:compileGroovy (Thread[Execution worker Thread 4,5,main]) started.
+:gradle:compileGroovy (Thread[included builds,5,main]) started.
+
+> Task :gradle:compileGroovy NO-SOURCE
+Skipping task ':gradle:compileGroovy' as it has no source files and no previous output files.
+Resolve mutations for :gradle:pluginDescriptors (Thread[Execution worker Thread 4,5,main]) started.
+:gradle:pluginDescriptors (Thread[included builds,5,main]) started.
+
+> Task :gradle:pluginDescriptors UP-TO-DATE
+Caching disabled for task ':gradle:pluginDescriptors' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':gradle:pluginDescriptors' as it is up-to-date.
+Resolve mutations for :gradle:processResources (Thread[included builds,5,main]) started.
+:gradle:processResources (Thread[included builds,5,main]) started.
+
+> Task :gradle:processResources UP-TO-DATE
+Caching disabled for task ':gradle:processResources' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':gradle:processResources' as it is up-to-date.
+Resolve mutations for :gradle:classes (Thread[included builds,5,main]) started.
+:gradle:classes (Thread[included builds,5,main]) started.
+
+> Task :gradle:classes UP-TO-DATE
+Skipping task ':gradle:classes' as it has no actions.
+Resolve mutations for :gradle:jar (Thread[included builds,5,main]) started.
+:gradle:jar (Thread[included builds,5,main]) started.
+
+> Task :gradle:jar UP-TO-DATE
+Caching disabled for task ':gradle:jar' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':gradle:jar' as it is up-to-date.
+Settings evaluated using settings file 'C:\Users\qw\Desktop\PosPro\pos_pro_tr\android\settings.gradle.kts'.
+Projects loaded. Root project using build file 'C:\Users\qw\Desktop\PosPro\pos_pro_tr\android\build.gradle.kts'.
+Included projects: [root project 'android', project ':app', project ':sqflite_android']
+
+> Configure project :app
+Evaluating project ':app' using build file 'C:\Users\qw\Desktop\PosPro\pos_pro_tr\android\app\build.gradle.kts'.
+Resolved plugin [id: 'com.android.application']
+Resolved plugin [id: 'kotlin-android']
+Resolved plugin [id: 'dev.flutter.flutter-gradle-plugin']
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+C/C++: android.ndkVersion from module build.gradle is [26.3.11579264]
+C/C++: android.ndkPath from module build.gradle is not set
+C/C++: ndk.dir in local.properties is not set
+C/C++: Not considering ANDROID_NDK_HOME because support was removed after deprecation period.
+C/C++: sdkFolder is C:\Users\qw\AppData\Local\Android\Sdk
+The CopyProcessingSpec.setFileMode(Integer) method has been deprecated. This is scheduled to be removed in Gradle 9.0. Please use the filePermissions(Action) method instead. Consult the upgrading guide for further information: https://docs.gradle.org/8.12/userguide/upgrading_version_8.html#unix_file_permissions_deprecated
+	at Build_gradle$3.execute(build.gradle.kts:16)
+	(Run with --stacktrace to get the full stack trace of this deprecation warning.)
+
+> Configure project :
+Evaluating root project 'android' using build file 'C:\Users\qw\Desktop\PosPro\pos_pro_tr\android\build.gradle.kts'.
+
+> Configure project :sqflite_android
+Evaluating project ':sqflite_android' using build file 'C:\Users\qw\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.1\android\build.gradle'.
+Build file 'C:\Users\qw\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.1\android\build.gradle': line 1
+Space-assignment syntax in Groovy DSL has been deprecated. This is scheduled to be removed in Gradle 10.0. Use assignment ('group = <value>') instead. Consult the upgrading guide for further information: https://docs.gradle.org/8.12/userguide/upgrading_version_8.html#groovy_space_assignment_syntax
+	at build_cw0kn0m7lp3vs583wierm36br.run(C:\Users\qw\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.1\android\build.gradle:1)
+	(Run with --stacktrace to get the full stack trace of this deprecation warning.)
+Build file 'C:\Users\qw\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.1\android\build.gradle': line 2
+Space-assignment syntax in Groovy DSL has been deprecated. This is scheduled to be removed in Gradle 10.0. Use assignment ('version = <value>') instead. Consult the upgrading guide for further information: https://docs.gradle.org/8.12/userguide/upgrading_version_8.html#groovy_space_assignment_syntax
+	at build_cw0kn0m7lp3vs583wierm36br.run(C:\Users\qw\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.1\android\build.gradle:2)
+	(Run with --stacktrace to get the full stack trace of this deprecation warning.)
+Using default execution profile
+Space-assignment syntax in Groovy DSL has been deprecated. This is scheduled to be removed in Gradle 10.0. Use assignment ('namespace = <value>') instead. Consult the upgrading guide for further information: https://docs.gradle.org/8.12/userguide/upgrading_version_8.html#groovy_space_assignment_syntax
+	at build_cw0kn0m7lp3vs583wierm36br$_run_closure3.doCall$original(C:\Users\qw\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.1\android\build.gradle:35)
+	(Run with --stacktrace to get the full stack trace of this deprecation warning.)
+	at build_cw0kn0m7lp3vs583wierm36br.run(C:\Users\qw\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.1\android\build.gradle:32)
+	(Run with --stacktrace to get the full stack trace of this deprecation warning.)
+Space-assignment syntax in Groovy DSL has been deprecated. This is scheduled to be removed in Gradle 10.0. Use assignment ('compileSdk = <value>') instead. Consult the upgrading guide for further information: https://docs.gradle.org/8.12/userguide/upgrading_version_8.html#groovy_space_assignment_syntax
+	at build_cw0kn0m7lp3vs583wierm36br$_run_closure3.doCall$original(C:\Users\qw\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.1\android\build.gradle:37)
+	(Run with --stacktrace to get the full stack trace of this deprecation warning.)
+	at build_cw0kn0m7lp3vs583wierm36br.run(C:\Users\qw\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.1\android\build.gradle:32)
+	(Run with --stacktrace to get the full stack trace of this deprecation warning.)
+Space-assignment syntax in Groovy DSL has been deprecated. This is scheduled to be removed in Gradle 10.0. Use assignment ('minSdk = <value>') instead. Consult the upgrading guide for further information: https://docs.gradle.org/8.12/userguide/upgrading_version_8.html#groovy_space_assignment_syntax
+	at build_cw0kn0m7lp3vs583wierm36br$_run_closure3$_closure9.doCall$original(C:\Users\qw\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.1\android\build.gradle:45)
+	(Run with --stacktrace to get the full stack trace of this deprecation warning.)
+	at build_cw0kn0m7lp3vs583wierm36br$_run_closure3.doCall$original(C:\Users\qw\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.1\android\build.gradle:44)
+	(Run with --stacktrace to get the full stack trace of this deprecation warning.)
+.\gradlew.bat : Your project is configured with Andr
+oid NDK 26.3.11579264, but the following plugin(s) d
+epend on a different Android NDK version:
+At line:1 char:1
++ .\gradlew.bat :app:assembleDebug --info --warning-
+mode all 2>&1 | Out ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Your p 
+   roject is...id NDK version::String) [], RemoteE  
+  xception
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+- sqflite_android requires Android NDK 27.0.12077973
+Fix this issue by using the highest Android NDK vers
+ion (they are backward compatible).
+Add the following to C:\Users\qw\Desktop\PosPro\pos_
+pro_tr\android\app\build.gradle.kts:
+
+    android {
+        ndkVersion = "27.0.12077973"
+        ...
+    }
+All projects evaluated.
+Task path ':app:assembleDebug' matched project ':app'
+Task name matched 'assembleDebug'
+Selected primary task 'assembleDebug' from project :app
+Tasks to be executed: [task ':app:DebugMinSdkCheck', task ':app:preBuild', task ':app:preDebugBuild', task ':app:mergeDebugNativeDebugMetadata', task ':app:checkKotlinGradlePluginConfigurationErrors', task ':app:compileFlutterBuildDebug', task ':app:packJniLibsflutterBuildDebug', task ':sqflite_android:preBuild', task ':sqflite_android:preDebugBuild', task ':sqflite_android:writeDebugAarMetadata', task ':app:checkDebugAarMetadata', task ':app:cleanMergeDebugAssets', task ':app:mergeDebugShaders', task ':app:compileDebugShaders', task ':app:generateDebugAssets', task ':sqflite_android:mergeDebugShaders', task ':sqflite_android:compileDebugShaders', task ':sqflite_android:generateDebugAssets', task ':sqflite_android:packageDebugAssets', task ':app:mergeDebugAssets', task ':app:copyFlutterAssetsDebug', task ':app:generateDebugResValues', task ':sqflite_android:generateDebugResValues', task ':sqflite_android:generateDebugResources', task ':sqflite_android:packageDebugResources', task ':app:mapDebugSourceSetPaths', task ':app:generateDebugResources', task ':app:mergeDebugResources', task ':app:packageDebugResources', task ':app:parseDebugLocalResources', task ':app:createDebugCompatibleScreenManifests', task ':app:extractDeepLinksDebug', task ':sqflite_android:extractDeepLinksDebug', task ':sqflite_android:processDebugManifest', task ':app:processDebugMainManifest', task ':app:processDebugManifest', task ':app:processDebugManifestForPackage', task ':sqflite_android:compileDebugLibraryResources', task ':sqflite_android:parseDebugLocalResources', task ':sqflite_android:generateDebugRFile', task ':app:processDebugResources', task ':sqflite_android:javaPreCompileDebug', task ':sqflite_android:compileDebugJavaWithJavac', task ':sqflite_android:bundleLibCompileToJarDebug', task ':app:compileDebugKotlin', task ':app:javaPreCompileDebug', task ':app:compileDebugJavaWithJavac', task ':app:compressDebugAssets', task ':app:processDebugJavaRes', task ':sqflite_android:processDebugJavaRes', task ':app:mergeDebugJavaResource', task ':app:checkDebugDuplicateClasses', task ':app:desugarDebugFileDependencies', task ':app:mergeExtDexDebug', task ':sqflite_android:bundleLibRuntimeToJarDebug', task ':app:mergeLibDexDebug', task ':app:dexBuilderDebug', task ':app:mergeProjectDexDebug', task ':app:preProfileBuild', task ':app:configureCMakeDebug[arm64-v8a]', task ':app:buildCMakeDebug[arm64-v8a]', task ':app:configureCMakeDebug[armeabi-v7a]', task ':app:buildCMakeDebug[armeabi-v7a]', task ':app:configureCMakeDebug[x86]', task ':app:buildCMakeDebug[x86]', task ':app:configureCMakeDebug[x86_64]', task ':app:buildCMakeDebug[x86_64]', task ':app:mergeDebugJniLibFolders', task ':sqflite_android:mergeDebugJniLibFolders', task ':sqflite_android:mergeDebugNativeLibs', task ':sqflite_android:copyDebugJniLibsProjectOnly', task ':app:mergeDebugNativeLibs', task ':app:stripDebugDebugSymbols', task ':app:validateSigningDebug', task ':app:writeDebugAppMetadata', task ':app:writeDebugSigningConfigVersions', task ':app:packageDebug', task ':app:createDebugApkListingFileRedirect', task ':app:assembleDebug']
+Tasks that were excluded: []
+work action Parameters of DexingWithClasspathTransform (Thread[Execution worker Thread 9,5,main]) started.
+Resolve mutations for :app:DebugMinSdkCheck (Thread[Execution worker Thread 9,5,main]) started.
+:app:DebugMinSdkCheck (Thread[included builds,5,main]) started.
+
+> Task :app:DebugMinSdkCheck
+Caching disabled for task ':app:DebugMinSdkCheck' because:
+  Build cache is disabled
+Task ':app:DebugMinSdkCheck' is not up-to-date because:
+  Task has not declared any outputs despite executing actions.
+Resolve mutations for :app:preBuild (Thread[included builds,5,main]) started.
+:app:preBuild (Thread[Execution worker Thread 9,5,main]) started.
+
+> Task :app:preBuild UP-TO-DATE
+Skipping task ':app:preBuild' as it has no actions.
+Resolve mutations for :app:preDebugBuild (Thread[Execution worker Thread 9,5,main]) started.
+:app:preDebugBuild (Thread[Execution worker Thread 9,5,main]) started.
+
+> Task :app:preDebugBuild UP-TO-DATE
+Skipping task ':app:preDebugBuild' as it has no actions.
+Resolve mutations for :app:mergeDebugNativeDebugMetadata (Thread[Execution worker Thread 9,5,main]) started.
+:app:mergeDebugNativeDebugMetadata (Thread[Execution worker Thread 9,5,main]) started.
+
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+Skipping task ':app:mergeDebugNativeDebugMetadata' as it has no source files and no previous output files.
+Resolve mutations for :app:checkKotlinGradlePluginConfigurationErrors (Thread[Execution worker Thread 9,5,main]) started.
+:app:checkKotlinGradlePluginConfigurationErrors (Thread[Execution worker Thread 9,5,main]) started.
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+Skipping task ':app:checkKotlinGradlePluginConfigurationErrors' as task onlyIf 'errorDiagnostics are present' is false.
+Resolve mutations for :app:compileFlutterBuildDebug (Thread[Execution worker Thread 9,5,main]) started.
+:app:compileFlutterBuildDebug (Thread[Execution worker Thread 9,5,main]) started.
+
+> Task :app:compileFlutterBuildDebug
+Caching disabled for task ':app:compileFlutterBuildDebug' because:
+  Build cache is disabled
+  Caching has not been enabled for the task
+Task ':app:compileFlutterBuildDebug' is not up-to-date because:
+  Task has failed previously.
+Invocation of Task.project at execution time has been deprecated. This will fail with an error in Gradle 10.0. This API is incompatible with the configuration cache, which will become the only mode supported by Gradle in a future release. Consult the upgrading guide for further information: https://docs.gradle.org/8.12/userguide/upgrading_version_7.html#task_project
+Invalid depfile: C:\Users\qw\Desktop\PosPro\pos_pro_
+tr\.dart_tool\flutter_build\13bd94167f5fc0f5dcb8cdb5
+dd379288\kernel_snapshot_program.d
+Invalid depfile: C:\Users\qw\Desktop\PosPro\pos_pro_
+tr\.dart_tool\flutter_build\13bd94167f5fc0f5dcb8cdb5
+dd379288\kernel_snapshot_program.d
+Starting process 'command 'C:\tools\flutter\bin\flutter.bat''. Working directory: C:\Users\qw\Desktop\PosPro\pos_pro_tr Command: C:\tools\flutter\bin\flutter.bat --quiet assemble --no-version-check --depfile C:\Users\qw\Desktop\PosPro\pos_pro_tr\build\app\intermediates\flutter\debug/flutter_build.d --output C:\Users\qw\Desktop\PosPro\pos_pro_tr\build\app\intermediates\flutter\debug -dTargetFile=lib/main.dart -dTargetPlatform=android -dBuildMode=debug -dTrackWidgetCreation=true -dFlavor= -dAndroidArchs=android-arm android-arm64 android-x64 -dMinSdkVersion=23 debug_android_application
+Successfully started process 'command 'C:\tools\flutter\bin\flutter.bat''
+Invalid depfile: C:\Users\qw\Desktop\PosPro\pos_pro_
+tr\.dart_tool\flutter_build\13bd94167f5fc0f5dcb8cdb5
+dd379288\kernel_snapshot_program.d
+Invalid depfile: C:\Users\qw\Desktop\PosPro\pos_pro_
+tr\.dart_tool\flutter_build\13bd94167f5fc0f5dcb8cdb5
+dd379288\kernel_snapshot_program.d
+Error: Couldn't resolve the package 'firebase_core' 
+in 'package:firebase_core/firebase_core.dart'.
+lib/main.dart:3:8: Error: Not found: 'package:fireba
+se_core/firebase_core.dart'
+import 'package:firebase_core/firebase_core.dart';
+       ^
+lib/firebase_options.dart:1:8: Error: Not found: 'pa
+ckage:firebase_core/firebase_core.dart'
+import 'package:firebase_core/firebase_core.dart' sh
+ow FirebaseOptions;
+       ^
+Error: Couldn't resolve the package 'cloud_firestore
+' in 'package:cloud_firestore/cloud_firestore.dart'.
+lib/features/auth/presentation/controllers/auth_cont
+roller.dart:4:8: Error: Error when reading 'lib/feat
+ures/data/models/user_model.dart': Sistem belirtilen
+ yolu bulamıyor.
+
+import '../../../data/models/user_model.dart';
+       ^
+lib/features/orders/data/models/order_model.dart:2:8
+: Error: Not found: 'package:cloud_firestore/cloud_f
+irestore.dart'
+import 'package:cloud_firestore/cloud_firestore.dart
+';
+       ^
+lib/features/payments/data/models/payment_model.dart
+:2:8: Error: Not found: 'package:cloud_firestore/clo
+ud_firestore.dart'
+import 'package:cloud_firestore/cloud_firestore.dart
+';
+       ^
+lib/features/discounts/data/models/discount_model.da
+rt:2:8: Error: Not found: 'package:cloud_firestore/c
+loud_firestore.dart'
+import 'package:cloud_firestore/cloud_firestore.dart
+';
+       ^
+lib/features/products/data/repositories/product_repo
+sitory.dart:1:8: Error: Not found: 'package:cloud_fi
+restore/cloud_firestore.dart'
+import 'package:cloud_firestore/cloud_firestore.dart
+';
+       ^
+lib/features/customers/data/repositories/customer_re
+pository.dart:1:8: Error: Not found: 'package:cloud_
+firestore/cloud_firestore.dart'
+import 'package:cloud_firestore/cloud_firestore.dart
+';
+       ^
+lib/features/orders/data/repositories/order_reposito
+ry.dart:1:8: Error: Not found: 'package:cloud_firest
+ore/cloud_firestore.dart'
+import 'package:cloud_firestore/cloud_firestore.dart
+';
+       ^
+lib/features/payments/data/repositories/payment_repo
+sitory.dart:1:8: Error: Not found: 'package:cloud_fi
+restore/cloud_firestore.dart'
+import 'package:cloud_firestore/cloud_firestore.dart
+';
+       ^
+lib/features/discounts/data/repositories/discount_re
+pository.dart:1:8: Error: Not found: 'package:cloud_
+firestore/cloud_firestore.dart'
+import 'package:cloud_firestore/cloud_firestore.dart
+';
+       ^
+lib/firebase_options.dart:30:16: Error: Type 'Fireba
+seOptions' not found.
+  static const FirebaseOptions android = FirebaseOpt
+ions(
+               ^^^^^^^^^^^^^^^
+lib/firebase_options.dart:38:16: Error: Type 'Fireba
+seOptions' not found.
+  static const FirebaseOptions ios = FirebaseOptions
+(
+               ^^^^^^^^^^^^^^^
+lib/firebase_options.dart:47:16: Error: Type 'Fireba
+seOptions' not found.
+  static const FirebaseOptions web = FirebaseOptions
+(
+               ^^^^^^^^^^^^^^^
+lib/firebase_options.dart:56:16: Error: Type 'Fireba
+seOptions' not found.
+  static const FirebaseOptions macos = FirebaseOptio
+ns(
+               ^^^^^^^^^^^^^^^
+lib/firebase_options.dart:65:16: Error: Type 'Fireba
+seOptions' not found.
+  static const FirebaseOptions windows = FirebaseOpt
+ions(
+               ^^^^^^^^^^^^^^^
+lib/firebase_options.dart:5:10: Error: Type 'Firebas
+eOptions' not found.
+  static FirebaseOptions get currentPlatform {
+         ^^^^^^^^^^^^^^^
+lib/features/products/data/repositories/product_repo
+sitory.dart:5:9: Error: Type 'FirebaseFirestore' not
+ found.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+        ^^^^^^^^^^^^^^^^^
+lib/features/customers/data/repositories/customer_re
+pository.dart:5:9: Error: Type 'FirebaseFirestore' n
+ot found.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+        ^^^^^^^^^^^^^^^^^
+lib/features/orders/data/repositories/order_reposito
+ry.dart:5:9: Error: Type 'FirebaseFirestore' not fou
+nd.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+        ^^^^^^^^^^^^^^^^^
+lib/features/payments/data/repositories/payment_repo
+sitory.dart:5:9: Error: Type 'FirebaseFirestore' not
+ found.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+        ^^^^^^^^^^^^^^^^^
+lib/features/discounts/data/repositories/discount_re
+pository.dart:5:9: Error: Type 'FirebaseFirestore' n
+ot found.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+        ^^^^^^^^^^^^^^^^^
+lib/firebase_options.dart:30:42: Error: Method not f
+ound: 'FirebaseOptions'.
+  static const FirebaseOptions android = FirebaseOpt
+ions(
+                                         ^^^^^^^^^^^
+^^^^
+lib/firebase_options.dart:38:38: Error: Method not f
+ound: 'FirebaseOptions'.
+  static const FirebaseOptions ios = FirebaseOptions
+(
+                                     ^^^^^^^^^^^^^^^
+lib/firebase_options.dart:47:38: Error: Method not f
+ound: 'FirebaseOptions'.
+  static const FirebaseOptions web = FirebaseOptions
+(
+                                     ^^^^^^^^^^^^^^^
+lib/firebase_options.dart:56:40: Error: Method not f
+ound: 'FirebaseOptions'.
+  static const FirebaseOptions macos = FirebaseOptio
+ns(
+                                       ^^^^^^^^^^^^^
+^^
+lib/firebase_options.dart:65:42: Error: Method not f
+ound: 'FirebaseOptions'.
+  static const FirebaseOptions windows = FirebaseOpt
+ions(
+                                         ^^^^^^^^^^^
+^^^^
+lib/firebase_options.dart:30:16: Error: 'FirebaseOpt
+ions' isn't a type.
+  static const FirebaseOptions android = FirebaseOpt
+ions(
+               ^^^^^^^^^^^^^^^
+lib/firebase_options.dart:38:16: Error: 'FirebaseOpt
+ions' isn't a type.
+  static const FirebaseOptions ios = FirebaseOptions
+(
+               ^^^^^^^^^^^^^^^
+lib/firebase_options.dart:47:16: Error: 'FirebaseOpt
+ions' isn't a type.
+  static const FirebaseOptions web = FirebaseOptions
+(
+               ^^^^^^^^^^^^^^^
+lib/firebase_options.dart:56:16: Error: 'FirebaseOpt
+ions' isn't a type.
+  static const FirebaseOptions macos = FirebaseOptio
+ns(
+               ^^^^^^^^^^^^^^^
+lib/firebase_options.dart:65:16: Error: 'FirebaseOpt
+ions' isn't a type.
+  static const FirebaseOptions windows = FirebaseOpt
+ions(
+               ^^^^^^^^^^^^^^^
+lib/features/auth/presentation/controllers/auth_cont
+roller.dart:30:20: Error: The method 'UserModel' isn
+'t defined for the class 'AuthController'.
+ - 'AuthController' is from 'package:pos_pro_tr/feat
+ures/auth/presentation/controllers/auth_controller.d
+art' ('lib/features/auth/presentation/controllers/au
+th_controller.dart').
+Try correcting the name to the name of an existing m
+ethod, or defining a method named 'UserModel'.
+      final user = UserModel(
+                   ^^^^^^^^^
+lib/features/orders/data/models/order_model.dart:34:
+35: Error: 'Timestamp' isn't a type.
+          : (json['orderDate'] as Timestamp).toDate(
+),
+                                  ^^^^^^^^^
+lib/features/payments/data/models/payment_model.dart
+:34:37: Error: 'Timestamp' isn't a type.
+          : (json['paymentDate'] as Timestamp).toDat
+e(),
+                                    ^^^^^^^^^
+lib/features/discounts/data/models/discount_model.da
+rt:32:35: Error: 'Timestamp' isn't a type.
+          : (json['startDate'] as Timestamp).toDate(
+),
+                                  ^^^^^^^^^
+lib/features/discounts/data/models/discount_model.da
+rt:35:33: Error: 'Timestamp' isn't a type.
+          : (json['endDate'] as Timestamp).toDate(),
+                                ^^^^^^^^^
+lib/features/products/data/repositories/product_repo
+sitory.dart:5:9: Error: 'FirebaseFirestore' isn't a 
+type.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+        ^^^^^^^^^^^^^^^^^
+lib/features/products/data/repositories/product_repo
+sitory.dart:5:40: Error: Undefined name 'FirebaseFir
+estore'.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+                                       ^^^^^^^^^^^^^
+^^^^
+lib/features/customers/data/repositories/customer_re
+pository.dart:5:9: Error: 'FirebaseFirestore' isn't 
+a type.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+        ^^^^^^^^^^^^^^^^^
+lib/features/customers/data/repositories/customer_re
+pository.dart:5:40: Error: Undefined name 'FirebaseF
+irestore'.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+                                       ^^^^^^^^^^^^^
+^^^^
+lib/features/orders/data/repositories/order_reposito
+ry.dart:5:9: Error: 'FirebaseFirestore' isn't a type
+.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+        ^^^^^^^^^^^^^^^^^
+lib/features/orders/data/repositories/order_reposito
+ry.dart:5:40: Error: Undefined name 'FirebaseFiresto
+re'.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+                                       ^^^^^^^^^^^^^
+^^^^
+lib/features/payments/data/repositories/payment_repo
+sitory.dart:5:9: Error: 'FirebaseFirestore' isn't a 
+type.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+        ^^^^^^^^^^^^^^^^^
+lib/features/payments/data/repositories/payment_repo
+sitory.dart:5:40: Error: Undefined name 'FirebaseFir
+estore'.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+                                       ^^^^^^^^^^^^^
+^^^^
+lib/features/discounts/data/repositories/discount_re
+pository.dart:5:9: Error: 'FirebaseFirestore' isn't 
+a type.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+        ^^^^^^^^^^^^^^^^^
+lib/features/discounts/data/repositories/discount_re
+pository.dart:5:40: Error: Undefined name 'FirebaseF
+irestore'.
+  final FirebaseFirestore _firestore = FirebaseFires
+tore.instance;
+                                       ^^^^^^^^^^^^^
+^^^^
+Unhandled exception:
+FileSystemException(uri=org-dartlang-untranslatable-
+uri:package%3Afirebase_core%2Ffirebase_core.dart; me
+ssage=StandardFileSystem only supports file:* and da
+ta:* URIs)
+#0      StandardFileSystem.entityForUri (package:fro
+nt_end/src/api_prototype/standard_file_system.dart:4
+5)
+#1      asFileUri (package:vm/kernel_front_end.dart:
+984)
+#2      writeDepfile (package:vm/kernel_front_end.da
+rt:1147)
+<asynchronous suspension>
+#3      FrontendCompiler.compile (package:frontend_s
+erver/frontend_server.dart:713)
+<asynchronous suspension>
+#4      starter (package:frontend_server/starter.dar
+t:109)
+<asynchronous suspension>
+#5      main (file:///C:/b/s/w/ir/x/w/sdk/pkg/fronte
+nd_server/bin/frontend_server_starter.dart:13)
+<asynchronous suspension>
+
+Target kernel_snapshot_program failed: Exception
+
+
+> Task :app:compileFlutterBuildDebug FAILED
+
+
+[Incubating] Problems report is available at: file:///C:/Users/qw/Desktop/PosPro/pos_pro_tr/build/reports/problems/problems-report.html
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildD
+ebug'.
+> Process 'command 'C:\tools\flutter\bin\flutter.bat
+'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trac
+e.
+> Run with --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 8s
+6 actionable tasks: 2 executed, 4 up-to-date
+Watched directory hierarchies: [C:\tools\flutter\packages\flutter_tools\gradle]
