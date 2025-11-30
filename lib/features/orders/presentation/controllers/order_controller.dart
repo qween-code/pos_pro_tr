@@ -141,16 +141,12 @@ class OrderController extends GetxController {
       final cashierName = currentRegister?.userName ?? 'Bilinmeyen';
       final cashierId = currentRegister?.userId ?? '';
       
-      // Branch bilgisi için AuthController kullan
-      final authController = Get.find<AuthController>();
-      final currentUser = authController.currentUser.value;
-      
       final Order newOrder = Order(
         customerId: selectedCustomer.value?.id.toString(),
         customerName: selectedCustomer.value?.name,
         cashierName: cashierName,
         cashierId: cashierId,
-        branchId: currentUser?.region ?? currentRegister?.id ?? '',
+        branchId: currentRegister?.id ?? '',
         orderDate: DateTime.now(),
         totalAmount: currentTotal.value,
         taxAmount: currentTax.value,
