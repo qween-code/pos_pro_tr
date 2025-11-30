@@ -29,6 +29,14 @@ class ReportController extends GetxController {
       debugPrint('📊 Dashboard Auto-Refresh: Order ${event.orderId} completed');
       fetchReportData();
     });
+
+    // Listen for sync events
+    _mediator.on<DashboardRefreshEvent>().listen((event) {
+      if (event.source == 'order_sync') {
+        debugPrint('📊 Dashboard Auto-Refresh: Sync completed');
+        fetchReportData();
+      }
+    });
   }
   
   @override
@@ -50,9 +58,11 @@ class ReportController extends GetxController {
   final RxDouble totalSales = 0.0.obs;
   final RxInt totalOrders = 0.obs;
   final RxDouble averageOrderValue = 0.0.obs;
+  final RxDouble highestSale = 0.0.obs;
   
   // Grafik Verileri (Geri eklendi)
   final RxMap<String, double> salesByPaymentMethod = <String, double>{}.obs;
+  final RxMap<String, double> paymentDistribution = <String, double>{}.obs;
   final RxList<DailySalesData> weeklySales = <DailySalesData>[].obs;
   final RxList<ProductSalesData> topProducts = <ProductSalesData>[].obs;
 
@@ -60,6 +70,10 @@ class ReportController extends GetxController {
   final RxList<ProductSalesData> productSales = <ProductSalesData>[].obs;
   final RxList<CashierSalesData> cashierSales = <CashierSalesData>[].obs;
   final RxList<BranchSalesData> branchSales = <BranchSalesData>[].obs;
+  
+  // Product Analytics
+  final RxList<DailySalesData> productDailySales = <DailySalesData>[].obs;
+  final RxList<HourlySalesData> productHourlySales = <HourlySalesData>[].obs;
 
   @override
   void onReady() {
@@ -97,17 +111,21 @@ class ReportController extends GetxController {
     await fetchReportData();
   }
 
+  // Alias for updateDateRange
+  Future<void> setDateRange(DateTime start, DateTime end) async {
+    await updateDateRange(start, end);
+  }
+
   Future<void> fetchReportData() async {
     isLoading.value = true;
     try {
-      // Tüm siparişleri çek (gerçek uygulamada tarih aralığına göre query yapılmalı)
-      final orders = await _orderRepository.getOrders();
+      // Tarih aralığına göre sorgula
+      final orders = await _orderRepository.getOrdersByDateRange(
+        startDate.value.subtract(const Duration(seconds: 1)),
+        endDate.value.add(const Duration(days: 1)),
+      );
       
-      // Tarih aralığına göre filtrele
-      final filteredOrders = orders.where((o) => 
-        o.orderDate.isAfter(startDate.value.subtract(const Duration(seconds: 1))) && 
-        o.orderDate.isBefore(endDate.value.add(const Duration(days: 1)))
-      ).toList();
+      final filteredOrders = orders; // Zaten filtrelendi
 
       allOrders.assignAll(filteredOrders);
       
@@ -128,6 +146,13 @@ class ReportController extends GetxController {
     totalSales.value = validOrders.fold(0, (sum, order) => sum + order.totalAmount);
     totalOrders.value = validOrders.length;
     averageOrderValue.value = totalOrders.value > 0 ? totalSales.value / totalOrders.value : 0;
+    
+    // En yüksek satışı bul
+    if (validOrders.isNotEmpty) {
+      highestSale.value = validOrders.map((o) => o.totalAmount).reduce((a, b) => a > b ? a : b);
+    } else {
+      highestSale.value = 0.0;
+    }
   }
 
   void _calculatePaymentMethods() {
@@ -144,6 +169,7 @@ class ReportController extends GetxController {
       }
     }
     salesByPaymentMethod.assignAll(methods);
+    paymentDistribution.assignAll(methods); // Aynı veriyi paymentDistribution'a da ata
   }
 
   void _calculateWeeklySales() {
@@ -170,6 +196,7 @@ class ReportController extends GetxController {
   Future<void> _calculateDetailedReports() async {
     // Ürün Bazlı Rapor
     final Map<String, double> pSales = {};
+    final Map<String, int> pQuantities = {};
     final Map<String, String> pNames = {};
     
     // Kasiyer Bazlı Rapor
@@ -194,16 +221,8 @@ class ReportController extends GetxController {
       if (items.isNotEmpty) {
         for (var item in items) {
           pSales[item.productId] = (pSales[item.productId] ?? 0) + item.totalPrice;
+          pQuantities[item.productId] = (pQuantities[item.productId] ?? 0) + item.quantity;
           pNames[item.productId] = item.productName ?? 'Ürün ${item.productId}';
-        }
-      } else {
-        // Eğer items boşsa (eski veri), repository'den çekmeyi dene (YAVAŞ ama gerekli olabilir)
-        try {
-           // Bu kısım sadece eski veriler için çalışır, performans için kaçınılmalı
-           // final fetchedItems = await _orderRepository.getOrderItems(order.id!);
-           // ...
-        } catch (e) {
-          // ignore
         }
       }
     }
@@ -211,8 +230,9 @@ class ReportController extends GetxController {
     // Listelere dönüştür ve sırala
     productSales.assignAll(pSales.entries.map((e) => ProductSalesData(
       productName: pNames[e.key] ?? 'Bilinmeyen',
-      amount: e.value,
-    )).toList()..sort((a, b) => b.amount.compareTo(a.amount)));
+      quantity: pQuantities[e.key] ?? 0,
+      totalSales: e.value,
+    )).toList()..sort((a, b) => b.totalSales.compareTo(a.totalSales)));
 
     cashierSales.assignAll(cSales.entries.map((e) => CashierSalesData(
       cashierName: e.key,
@@ -230,6 +250,58 @@ class ReportController extends GetxController {
   }
 
   // ... _calculateWeeklySales ...
+  // ... _calculateWeeklySales ...
+
+  void calculateProductAnalytics(String productId) {
+    final validOrders = allOrders.where((o) => 
+      (o.status == 'completed' || o.status == 'partial_refunded') &&
+      o.items.any((i) => i.productId == productId)
+    ).toList();
+
+    // Daily Sales
+    final Map<String, double> dailyMap = {};
+    // Hourly Sales
+    final Map<int, double> hourlyMap = {};
+
+    for (var order in validOrders) {
+      final item = order.items.firstWhere((i) => i.productId == productId);
+      final dateKey = DateFormat('yyyy-MM-dd').format(order.orderDate);
+      final hourKey = order.orderDate.hour;
+
+      dailyMap[dateKey] = (dailyMap[dateKey] ?? 0) + item.totalPrice;
+      hourlyMap[hourKey] = (hourlyMap[hourKey] ?? 0) + item.totalPrice;
+    }
+
+    // Convert to lists
+    // Daily: Fill missing days in range
+    final List<DailySalesData> dailyList = [];
+    DateTime current = startDate.value;
+    while (current.isBefore(endDate.value) || current.isAtSameMomentAs(endDate.value)) {
+      final dateKey = DateFormat('yyyy-MM-dd').format(current);
+      dailyList.add(DailySalesData(
+        dayName: DateFormat('dd MMM', 'tr_TR').format(current),
+        amount: dailyMap[dateKey] ?? 0.0,
+      ));
+      current = current.add(const Duration(days: 1));
+    }
+    productDailySales.assignAll(dailyList);
+
+    // Hourly: Fill 0-23
+    final List<HourlySalesData> hourlyList = [];
+    for (int i = 0; i < 24; i++) {
+      hourlyList.add(HourlySalesData(
+        hour: i,
+        amount: hourlyMap[i] ?? 0.0,
+      ));
+    }
+    productHourlySales.assignAll(hourlyList);
+  }
+}
+
+class HourlySalesData {
+  final int hour;
+  final double amount;
+  HourlySalesData({required this.hour, required this.amount});
 }
 
 class CashierSalesData {
@@ -253,6 +325,11 @@ class DailySalesData {
 
 class ProductSalesData {
   final String productName;
-  final double amount;
-  ProductSalesData({required this.productName, required this.amount});
+  final int quantity;
+  final double totalSales;
+  ProductSalesData({
+    required this.productName, 
+    required this.quantity,
+    required this.totalSales,
+  });
 }

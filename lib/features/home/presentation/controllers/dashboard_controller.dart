@@ -24,13 +24,14 @@ class DashboardController extends GetxController {
   }
 
   final RxDouble todaysSales = 0.0.obs;
+  final RxDouble weeklySales = 0.0.obs;
+  final RxDouble monthlySales = 0.0.obs;
   final RxInt todaysOrders = 0.obs;
-  final RxInt newCustomersToday = 0.obs;
+  final RxInt totalCustomers = 0.obs;
   final RxInt lowStockCount = 0.obs;
   final RxBool isLoading = false.obs;
   final Rx<String?> selectedBranchId = Rx<String?>(null);
-  final Rx<DateTimeRange?> selectedDateRange = Rx<DateTimeRange?>(null);
-
+  
   // Toplam satış ve sipariş (filtrelenmiş)
   final RxDouble totalSales = 0.0.obs;
   final RxInt totalOrders = 0.obs;
@@ -45,33 +46,13 @@ class DashboardController extends GetxController {
   void selectBranch(String? branchId) {
     selectedBranchId.value = branchId;
     loadDashboardData();
-    Get.snackbar(
-      'Şube Değişti',
-      'Dashboard verileri güncelleniyor...',
-      backgroundColor: Colors.blue,
-      colorText: Colors.white,
-      duration: const Duration(seconds: 1),
-    );
-  }
-
-  /// Tarih aralığı değiştiğinde
-  void selectDateRange(DateTimeRange? range) {
-    selectedDateRange.value = range;
-    loadDashboardData();
-    Get.snackbar(
-      'Tarih Filtresi',
-      'Veriler seçilen tarihe göre güncelleniyor',
-      backgroundColor: Colors.orange,
-      colorText: Colors.white,
-      duration: const Duration(seconds: 1),
-    );
   }
 
   Future<void> loadDashboardData() async {
     isLoading.value = true;
     try {
       await Future.wait([
-        _loadTodaysSales(),
+        _loadSalesMetrics(),
         _loadNewCustomers(),
         _loadLowStockProducts(),
       ]);
@@ -80,56 +61,46 @@ class DashboardController extends GetxController {
     }
   }
 
-  Future<void> _loadTodaysSales() async {
+  Future<void> _loadSalesMetrics() async {
     try {
       final now = DateTime.now();
+      final startOfDay = DateTime(now.year, now.month, now.day);
+      final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+      final startOfMonth = DateTime(now.year, now.month, 1);
+
+      final orders = await _orderRepository.getOrders(limit: 5000); // Fetch more for analytics
       
-      // Tarih filtresi varsa onu kullan, yoksa bugünü kullan
-      final start = selectedDateRange.value?.start ?? DateTime(now.year, now.month, now.day);
-      final end = selectedDateRange.value?.end.add(const Duration(days: 1)) ?? 
-                  DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+      // Filter completed orders
+      final completedOrders = orders.where((o) => o.status == 'completed').toList();
 
-      final orders = await _orderRepository.getOrders();
+      // Calculate Today
+      final todayOrdersList = completedOrders.where((o) => o.orderDate.isAfter(startOfDay)).toList();
+      todaysSales.value = todayOrdersList.fold(0.0, (sum, o) => sum + o.totalAmount);
+      todaysOrders.value = todayOrdersList.length;
+
+      // Calculate Week
+      final weekOrdersList = completedOrders.where((o) => o.orderDate.isAfter(startOfWeek)).toList();
+      weeklySales.value = weekOrdersList.fold(0.0, (sum, o) => sum + o.totalAmount);
+
+      // Calculate Month
+      final monthOrdersList = completedOrders.where((o) => o.orderDate.isAfter(startOfMonth)).toList();
+      monthlySales.value = monthOrdersList.fold(0.0, (sum, o) => sum + o.totalAmount);
+
+      // Update filtered totals (for now same as today, or based on selection if we had one)
+      // For simplicity in this controller, we keep totalSales as today's sales or implement date range logic if needed.
+      // But HomeScreen uses specific cards.
       
-      // Filtrele
-      var filteredOrders = orders.where((order) =>
-        order.orderDate.isAfter(start) &&
-        order.orderDate.isBefore(end) &&
-        (order.status == 'completed' || order.status == 'partial_refunded')
-      ).toList();
-
-      // Şube filtresi
-      if (selectedBranchId.value != null) {
-        filteredOrders = filteredOrders.where((order) {
-           // Order modelinde branchId varsa kullan
-           // Şimdilik tüm siparişleri göster (branchId alanı eklenecek)
-           return true; 
-        }).toList();
-      }
-
-      // Değerleri güncelle
-      todaysOrders.value = filteredOrders.length;
-      todaysSales.value = filteredOrders.fold(
-        0.0,
-        (sum, order) => sum + order.totalAmount,
-      );
-
-      // Toplam değerleri de güncelle (SalesDetailScreen için)
-      totalOrders.value = todaysOrders.value;
-      totalSales.value = todaysSales.value;
-
     } catch (e) {
-      print('Günlük satış yükleme hatası: $e');
+      debugPrint('Satış verileri yükleme hatası: $e');
     }
   }
 
   Future<void> _loadNewCustomers() async {
     try {
       final customers = await _customerRepository.getCustomers();
-      // Şimdilik tüm müşterileri sayıyoruz
-      newCustomersToday.value = customers.length;
+      totalCustomers.value = customers.length;
     } catch (e) {
-      print('Müşteri yükleme hatası: $e');
+      debugPrint('Müşteri yükleme hatası: $e');
     }
   }
 
@@ -138,7 +109,7 @@ class DashboardController extends GetxController {
       final products = await _productRepository.getProducts();
       lowStockCount.value = products.where((p) => p.stock <= p.criticalStockLevel).length;
     } catch (e) {
-      print('Düşük stok yükleme hatası: $e');
+      debugPrint('Düşük stok yükleme hatası: $e');
     }
   }
 }

@@ -1,9 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/theme_constants.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../orders/data/repositories/hybrid_order_repository.dart';
+import '../../../../core/database/database_instance.dart';
+import '../../../../core/mediator/app_mediator.dart';
+import '../../../../core/events/app_events.dart';
 
 /// Çalışan Performans Raporu Ekranı
 class CashierPerformanceScreen extends StatefulWidget {
@@ -15,6 +20,9 @@ class CashierPerformanceScreen extends StatefulWidget {
 
 class _CashierPerformanceScreenState extends State<CashierPerformanceScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  late final HybridOrderRepository _repository;
+  final AppMediator _mediator = AppMediator();
+  StreamSubscription? _refreshSubscription;
   
   String selectedPeriod = 'today';
   String? selectedBranch;
@@ -28,7 +36,26 @@ class _CashierPerformanceScreenState extends State<CashierPerformanceScreen> {
   @override
   void initState() {
     super.initState();
+    final dbInstance = Get.find<DatabaseInstance>();
+    _repository = HybridOrderRepository(
+      localDb: dbInstance.database,
+      firestore: FirebaseFirestore.instance,
+    );
+    
+    _refreshSubscription = _mediator.on<DashboardRefreshEvent>().listen((event) {
+      if (event.source == 'order_sync') {
+        _loadData();
+      }
+    });
+
     _checkAccess();
+  }
+
+  @override
+  void dispose() {
+    _refreshSubscription?.cancel();
+    _repository.dispose();
+    super.dispose();
   }
 
   Future<void> _checkAccess() async {
@@ -56,10 +83,8 @@ class _CashierPerformanceScreenState extends State<CashierPerformanceScreen> {
 
       final branchSet = <String>{};
       for (var doc in snapshot.docs) {
-        final region = doc.data()['region'] as String?;
-        if (region != null && region.isNotEmpty) {
-          branchSet.add(region);
-        }
+        final region = doc.data()['region'] as String? ?? 'Ana Şube';
+        branchSet.add(region);
       }
 
       setState(() {
@@ -73,6 +98,7 @@ class _CashierPerformanceScreenState extends State<CashierPerformanceScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => isLoading = true);
 
     try {
@@ -96,91 +122,109 @@ class _CashierPerformanceScreenState extends State<CashierPerformanceScreen> {
 
       debugPrint('📅 Tarih aralığı: ${DateFormat('dd/MM/yyyy').format(startDate)} - ${DateFormat('dd/MM/yyyy').format(now)}');
 
-      // 2. Kasiyerleri çek
+      // 2. Kasiyerleri çek (Firestore'dan devam, çünkü kullanıcılar local DB'de olmayabilir)
+      // Şube filtresini Firestore query'sinde değil, local'de yapalım çünkü mevcut users'larda region field'ı olmayabilir
       var cashierQuery = _firestore
           .collection('users')
           .where('role', isEqualTo: 'cashier');
 
-      if (selectedBranch != null) {
-        cashierQuery = cashierQuery.where('region', isEqualTo: selectedBranch);
-      }
-
       final cashiersSnapshot = await cashierQuery.get();
-      debugPrint('👥 Toplam kasiyer: ${cashiersSnapshot.docs.length}');
+      debugPrint('👥 Toplam kasiyer (raw): ${cashiersSnapshot.docs.length}');
 
-      if (cashiersSnapshot.docs.isEmpty) {
-        setState(() {
-          performances = [];
-          totalSales = 0.0;
-          totalOrders = 0;
-        });
-        return;
-      }
-
-      // 3. Performans haritası oluştur
+      // 3. Performans haritası oluştur ve şube filtresini burada uygula
       final Map<String, CashierPerformance> perfMap = {};
       
       for (var doc in cashiersSnapshot.docs) {
         final data = doc.data();
+        final region = data['region'] as String? ?? 'Ana Şube'; // Varsayılan şube
+        
+        // Şube filtresi varsa uygula
+        if (selectedBranch != null && region != selectedBranch) {
+          continue;
+        }
+        
         perfMap[doc.id] = CashierPerformance(
           id: doc.id,
           name: data['name'] ?? 'Bilinmeyen',
-          branch: data['region'] ?? 'Diğer',
+          branch: region,
           totalSales: 0.0,
           orderCount: 0,
         );
       }
+      
+      debugPrint('👥 Filtrelenmiş kasiyer sayısı: ${perfMap.length}');
 
-      // 4. Siparişleri çek (status filtresini bellekte yapacağız - indeks gereksiz)
-      final ordersSnapshot = await _firestore
-          .collection('orders')
-          .where('orderDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
-          .get();
+      // 4. Siparişleri çek (Hybrid Repository'den)
+      final orders = await _repository.getOrdersByDateRange(startDate, now.add(const Duration(days: 1)));
 
-      debugPrint('📦 Toplam sipariş: ${ordersSnapshot.docs.length}');
+      debugPrint('📦 Toplam sipariş: ${orders.length}');
 
-      // 5. Siparişleri kasiyerlere eşle
+      // 5. Kasiyerleri ID ve Name'e göre map'le (çünkü bazı siparişlerde ID olmayabilir)
+      final Map<String, CashierPerformance> perfByName = {};
+      for (var perf in perfMap.values) {
+        perfByName[perf.name] = perf;
+      }
+
+      // 6. Siparişleri kasiyerlere eşle
       int matchedOrders = 0;
-      for (var doc in ordersSnapshot.docs) {
-        final data = doc.data();
+      int unmatchedOrders = 0;
+      
+      for (var order in orders) {
+        // Sadece tamamlanmış veya kısmi iadeli siparişleri işle
+        if (order.status != 'completed' && order.status != 'partial_refunded') continue;
         
-        // Sadece tamamlanmış siparişleri işle
-        if (data['status'] != 'completed') continue;
-        
-        final cashierId = data['cashierId'] as String?;
-        final amount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
+        final cashierId = order.cashierId;
+        final cashierName = order.cashierName;
+        final amount = order.totalAmount;
 
+        // Önce ID ile eşleştir
         if (cashierId != null && perfMap.containsKey(cashierId)) {
           perfMap[cashierId]!.totalSales += amount;
           perfMap[cashierId]!.orderCount++;
           matchedOrders++;
         }
+        // ID yoksa isimle eşleştir
+        else if (cashierName != null && perfByName.containsKey(cashierName)) {
+          perfByName[cashierName]!.totalSales += amount;
+          perfByName[cashierName]!.orderCount++;
+          matchedOrders++;
+        } else {
+          unmatchedOrders++;
+          debugPrint('⚠️ Eşleşmeyen sipariş: ${order.id} (cashierId: $cashierId, cashierName: $cashierName)');
+        }
       }
 
       debugPrint('✅ Eşleşen sipariş: $matchedOrders');
+      debugPrint('⚠️ Eşleşmeyen sipariş: $unmatchedOrders');
 
-      // 6. Sırala ve hesapla
+      // 7. Sırala ve hesapla
       final sortedPerformances = perfMap.values.toList()
         ..sort((a, b) => b.totalSales.compareTo(a.totalSales));
 
       final total = sortedPerformances.fold(0.0, (sum, p) => sum + p.totalSales);
-      final orders = sortedPerformances.fold(0, (sum, p) => sum + p.orderCount);
+      final totalOrderCount = sortedPerformances.fold(0, (sum, p) => sum + p.orderCount);
 
-      setState(() {
-        performances = sortedPerformances;
-        totalSales = total;
-        totalOrders = orders;
-      });
+      if (mounted) {
+        setState(() {
+          performances = sortedPerformances;
+          totalSales = total;
+          totalOrders = totalOrderCount;
+        });
+      }
     } catch (e) {
       debugPrint('❌ Veri yükleme hatası: $e');
-      Get.snackbar(
-        'Hata',
-        'Veriler yüklenirken bir hata oluştu: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      if (mounted) {
+        Get.snackbar(
+          'Hata',
+          'Veriler yüklenirken bir hata oluştu: $e',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
@@ -334,15 +378,18 @@ class _CashierPerformanceScreenState extends State<CashierPerformanceScreen> {
         children: [
           Icon(icon, color: color, size: 24),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
           Text(
             title,
@@ -460,11 +507,17 @@ class _CashierPerformanceScreenState extends State<CashierPerformanceScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Satış: ₺${perf.totalSales.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Satış: ₺${perf.totalSales.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ),
                           Text(

@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/order_model.dart' as models;
 import '../../../../core/database/app_database.dart' as db;
+import '../../../../core/mediator/app_mediator.dart';
+import '../../../../core/events/app_events.dart';
 
 class HybridOrderRepository {
   final db.AppDatabase _localDb;
@@ -22,9 +24,12 @@ class HybridOrderRepository {
     _startFirebaseListener();
   }
 
+  final AppMediator _mediator = AppMediator();
+
   void _startFirebaseListener() {
     _firebaseListener = _firestore.collection('orders').snapshots().listen(
       (snapshot) async {
+        bool hasChanges = false;
         for (final change in snapshot.docChanges) {
           final data = change.doc.data();
           if (data == null) continue;
@@ -36,16 +41,22 @@ class HybridOrderRepository {
               case DocumentChangeType.added:
               case DocumentChangeType.modified:
                 await _upsertToSQLite(orderId, data);
+                hasChanges = true;
                 break;
               case DocumentChangeType.removed:
                 await (_localDb.delete(_localDb.orders)
                       ..where((t) => t.id.equals(orderId)))
                     .go();
+                hasChanges = true;
                 break;
             }
           } catch (e) {
             debugPrint('❌ Firebase listener hatası (Order $orderId): $e');
           }
+        }
+        
+        if (hasChanges) {
+          _mediator.publish(DashboardRefreshEvent(source: 'order_sync'));
         }
       },
       onError: (error) {
@@ -155,6 +166,15 @@ class HybridOrderRepository {
     final orders = await (_localDb.select(_localDb.orders)
           ..orderBy([(t) => OrderingTerm(expression: t.orderDate, mode: OrderingMode.desc)])
           ..limit(limit))
+        .get();
+
+    return orders.map(_toOrderModel).toList();
+  }
+
+  Future<List<models.Order>> getOrdersByDateRange(DateTime startDate, DateTime endDate) async {
+    final orders = await (_localDb.select(_localDb.orders)
+          ..where((t) => t.orderDate.isBiggerOrEqualValue(startDate) & t.orderDate.isSmallerOrEqualValue(endDate))
+          ..orderBy([(t) => OrderingTerm(expression: t.orderDate, mode: OrderingMode.desc)]))
         .get();
 
     return orders.map(_toOrderModel).toList();

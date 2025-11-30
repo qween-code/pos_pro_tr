@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/theme_constants.dart';
 import '../controllers/report_controller.dart';
+import 'product_analytics_screen.dart';
 
 class ReportScreen extends StatelessWidget {
   final ReportController _controller = Get.put(ReportController());
@@ -13,316 +14,391 @@ class ReportScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        title: Text('Raporlar & Analiz', style: TextStyle(color: AppTheme.textPrimary)),
-        backgroundColor: Colors.transparent,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: AppTheme.cardGradient,
-          ),
-        ),
-        iconTheme: IconThemeData(color: AppTheme.textPrimary),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: AppTheme.textPrimary),
-            onPressed: () => _controller.fetchReportData(),
-          ),
-        ],
-      ),
-      body: Obx(() {
-        if (_controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildModernAppBar(),
+            Expanded(
+              child: Obx(() {
+                if (_controller.isLoading.value) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: AppTheme.primary),
+                  );
+                }
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: double.infinity,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => Get.toNamed('/reports/cashier'),
-                        icon: const Icon(Icons.people, color: Colors.white),
-                        label: const Text('Çalışan Performansı', style: TextStyle(color: Colors.white)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
+                return RefreshIndicator(
+                  onRefresh: _controller.fetchReportData,
+                  color: AppTheme.primary,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
+                        _buildQuickAccess(),
+                        const SizedBox(height: 24),
+                        _buildPeriodSelector(),
+                        const SizedBox(height: 24),
+                        _buildSalesOverview(),
+                        const SizedBox(height: 24),
+                        _buildMetricsGrid(),
+                        const SizedBox(height: 24),
+                        _buildTopProducts(),
+                        const SizedBox(height: 24),
+                        _buildPaymentBreakdown(),
+                        const SizedBox(height: 80),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => Get.toNamed('/reports/sales'),
-                          icon: const Icon(Icons.receipt_long, color: Colors.white),
-                          label: const Text('Z Raporu', style: TextStyle(color: Colors.white)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              _buildDateFilters(context),
-              const SizedBox(height: 20),
-              _buildSummaryCards(),
-              const SizedBox(height: 24),
-              _buildWeeklySalesChart(),
-              const SizedBox(height: 24),
-              _buildPaymentDistributionChart(),
-              const SizedBox(height: 24),
-              _buildDetailedReports(),
-              const SizedBox(height: 24),
-              _buildTopProductsList(),
-            ],
-          ),
-        );
-      }),
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildSummaryCards() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildInfoCard(
-            'Toplam Ciro',
-            '₺${_controller.totalSales.value.toStringAsFixed(2)}',
-            Icons.attach_money,
-            Colors.green,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildInfoCard(
-            'Sipariş Sayısı',
-            '${_controller.totalOrders.value}',
-            Icons.shopping_bag,
-            Colors.blue,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoCard(String title, String value, IconData icon, Color color) {
+  Widget _buildModernAppBar() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      decoration: const BoxDecoration(
+        gradient: AppTheme.primaryGradient,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, color: color, size: 28),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+              InkWell(
+                onTap: () => Get.back(),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
                 ),
-                child: Text(
-                  'Bu Ay',
-                  style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Raporlar & Analiz',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Satış performansınızı izleyin',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              InkWell(
+                onTap: () => _controller.fetchReportData(),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.refresh, color: Colors.white, size: 20),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              color: AppTheme.textPrimary,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickAccess() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildAccessCard(
+              'Çalışan Performansı',
+              Icons.people_rounded,
+              const Color(0xFF8B5CF6),
+              () => Get.toNamed('/reports/cashier'),
             ),
           ),
-          Text(
-            title,
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildAccessCard(
+              'Z Raporu',
+              Icons.receipt_long_rounded,
+              const Color(0xFFF59E0B),
+              () => Get.toNamed('/reports/sales'),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildAccessCard(
+              'Ürün Analizi',
+              Icons.inventory_2_rounded,
+              const Color(0xFF10B981),
+              () => Get.to(() => const AdvancedProductAnalyticsScreen()),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildWeeklySalesChart() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Haftalık Satış Grafiği',
-            style: TextStyle(
-              color: AppTheme.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+  Widget _buildAccessCard(String title, IconData icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color, color.withOpacity(0.7)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          const SizedBox(height: 24),
-          SizedBox(
-            height: 200,
-            child: BarChart(
-              BarChartData(
-                alignment: BarChartAlignment.spaceAround,
-                maxY: _controller.weeklySales.fold(0.0, (max, e) => e.amount > max ? e.amount : max) * 1.2,
-                barTouchData: BarTouchData(
-                  touchTooltipData: BarTouchTooltipData(
-                    tooltipBgColor: Colors.blueGrey,
-                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      return BarTooltipItem(
-                        '₺${rod.toY.toStringAsFixed(0)}',
-                        const TextStyle(color: Colors.white),
-                      );
-                    },
-                  ),
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        if (value.toInt() >= 0 && value.toInt() < _controller.weeklySales.length) {
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              _controller.weeklySales[value.toInt()].dayName,
-                              style: TextStyle(color: AppTheme.textSecondary, fontSize: 10),
-                            ),
-                          );
-                        }
-                        return const Text('');
-                      },
-                    ),
-                  ),
-                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                ),
-                gridData: FlGridData(show: false),
-                borderData: FlBorderData(show: false),
-                barGroups: _controller.weeklySales.asMap().entries.map((entry) {
-                  return BarChartGroupData(
-                    x: entry.key,
-                    barRods: [
-                      BarChartRodData(
-                        toY: entry.value.amount,
-                        color: AppTheme.primary,
-                        width: 16,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                      ),
-                    ],
-                  );
-                }).toList(),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: Colors.white, size: 32),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildPaymentDistributionChart() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
+  Widget _buildPeriodSelector() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Ödeme Yöntemi Dağılımı',
+          const Text(
+            'Dönem Seçimi',
             style: TextStyle(
               color: AppTheme.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 24),
-          SizedBox(
-            height: 200,
-            child: Row(
-              children: [
-                Expanded(
-                  child: PieChart(
-                    PieChartData(
-                      sectionsSpace: 2,
-                      centerSpaceRadius: 40,
-                      sections: _controller.salesByPaymentMethod.entries.map((entry) {
-                        final index = _controller.salesByPaymentMethod.keys.toList().indexOf(entry.key);
-                        final colors = [Colors.blue, Colors.green, Colors.orange, Colors.purple, Colors.red];
-                        final color = colors[index % colors.length];
-                        
-                        return PieChartSectionData(
-                          color: color,
-                          value: entry.value,
-                          title: '${((entry.value / _controller.totalSales.value) * 100).toStringAsFixed(0)}%',
-                          radius: 50,
-                          titleStyle: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildPeriodChip(
+                  'Bugün',
+                  () {
+                    final now = DateTime.now();
+                    _controller.setDateRange(
+                      DateTime(now.year, now.month, now.day),
+                      now,
+                    );
+                  },
                 ),
-                const SizedBox(width: 16),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: _controller.salesByPaymentMethod.entries.map((entry) {
-                    final index = _controller.salesByPaymentMethod.keys.toList().indexOf(entry.key);
-                    final colors = [Colors.blue, Colors.green, Colors.orange, Colors.purple, Colors.red];
-                    final color = colors[index % colors.length];
-                    
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildPeriodChip(
+                  'Bu Hafta',
+                  () {
+                    final now = DateTime.now();
+                    _controller.setDateRange(
+                      now.subtract(const Duration(days: 7)),
+                      now,
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildPeriodChip(
+                  'Bu Ay',
+                  () {
+                    final now = DateTime.now();
+                    _controller.setDateRange(
+                      DateTime(now.year, now.month, 1),
+                      now,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodChip(String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          gradient: AppTheme.cardGradient,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.primary.withOpacity(0.3)),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSalesOverview() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Satış Özeti',
+            style: TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF10B981), Color(0xFF34D399)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF10B981).withOpacity(0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.account_balance_wallet_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                          ),
-                          const SizedBox(width: 8),
                           Text(
-                            entry.key,
-                            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                            'Toplam Ciro',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
                           ),
+                          SizedBox(height: 4),
                         ],
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Obx(() => FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '₺${_controller.totalSales.value.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Obx(() => Text(
+                      '${_controller.totalOrders.value} Sipariş',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14,
+                      ),
+                    )),
+                    const SizedBox(width: 16),
+                    Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.5),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Obx(() => Text(
+                      'Ort. ₺${_controller.averageOrderValue.value.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14,
+                      ),
+                    )),
+                  ],
                 ),
               ],
             ),
@@ -332,17 +408,99 @@ class ReportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTopProductsList() {
+  Widget _buildMetricsGrid() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Performans Metrikleri',
+            style: TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Obx(() => _buildMetricCard(
+                  'Günlük Ortalama',
+                  '₺${(_controller.totalSales.value / 30).toStringAsFixed(0)}',
+                  Icons.calendar_today,
+                  const Color(0xFF3B82F6),
+                )),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Obx(() => _buildMetricCard(
+                  'En Yüksek Satış',
+                  '₺${_controller.highestSale.value.toStringAsFixed(0)}',
+                  Icons.trending_up,
+                  const Color(0xFF10B981),
+                )),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricCard(String title, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        gradient: AppTheme.cardGradient,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 12),
           Text(
+            title,
+            style: const TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopProducts() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
             'En Çok Satan Ürünler',
             style: TextStyle(
               color: AppTheme.textPrimary,
@@ -351,106 +509,123 @@ class ReportScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          ..._controller.topProducts.map((product) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  product.productName,
-                  style: TextStyle(color: AppTheme.textPrimary),
+          Obx(() {
+            final products = _controller.topProducts.take(5).toList();
+            if (products.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.cardGradient,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                Text(
-                  '₺${product.amount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    color: AppTheme.primary,
-                    fontWeight: FontWeight.bold,
+                child: const Center(
+                  child: Text(
+                    'Henüz ürün satışı yok',
+                    style: TextStyle(color: AppTheme.textSecondary),
                   ),
                 ),
-              ],
-            ),
-          )).toList(),
-          if (_controller.topProducts.isEmpty)
-            Text(
-              'Veri yok',
-              style: TextStyle(color: AppTheme.textSecondary),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDateFilters(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _buildFilterChip('Günlük', 'daily'),
-          const SizedBox(width: 8),
-          _buildFilterChip('Haftalık', 'weekly'),
-          const SizedBox(width: 8),
-          _buildFilterChip('Aylık', 'monthly'),
-          const SizedBox(width: 8),
-          ActionChip(
-            label: const Text('Özel Tarih'),
-            avatar: const Icon(Icons.calendar_today, size: 16),
-            onPressed: () async {
-              final picked = await showDateRangePicker(
-                context: context,
-                firstDate: DateTime(2020),
-                lastDate: DateTime.now(),
               );
-              if (picked != null) {
-                _controller.updateDateRange(picked.start, picked.end);
-              }
-            },
-          ),
+            }
+
+            return Container(
+              decoration: BoxDecoration(
+                gradient: AppTheme.cardGradient,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: products.length,
+                separatorBuilder: (context, index) => const Divider(
+                  color: AppTheme.textSecondary,
+                  height: 1,
+                  indent: 16,
+                  endIndent: 16,
+                ),
+                itemBuilder: (context, index) {
+                  final product = products[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: AppTheme.primary.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '#${index + 1}',
+                              style: const TextStyle(
+                                color: AppTheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                product.productName,
+                                style: const TextStyle(
+                                  color: AppTheme.textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${product.quantity} adet',
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              '₺${product.totalSales.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: AppTheme.primary,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            );
+          }),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChip(String label, String value) {
-    return Obx(() {
-      final isSelected = _controller.selectedPeriod.value == value;
-      return FilterChip(
-        label: Text(label),
-        selected: isSelected,
-        onSelected: (bool selected) {
-          if (selected) _controller.setPeriod(value);
-        },
-        selectedColor: AppTheme.primary.withOpacity(0.2),
-        checkmarkColor: AppTheme.primary,
-        labelStyle: TextStyle(
-          color: isSelected ? AppTheme.primary : AppTheme.textPrimary,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        ),
-      );
-    });
-  }
-
-  Widget _buildDetailedReports() {
-    return Column(
-      children: [
-        _buildReportSection('Kasiyer Performansı', _controller.cashierSales, (item) => item.cashierName),
-        const SizedBox(height: 20),
-        _buildReportSection('Şube Performansı', _controller.branchSales, (item) => item.branchName),
-      ],
-    );
-  }
-
-  Widget _buildReportSection(String title, RxList<dynamic> data, String Function(dynamic) getName) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
+  Widget _buildPaymentBreakdown() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
+          const Text(
+            'Ödeme Yöntemleri',
             style: TextStyle(
               color: AppTheme.textPrimary,
               fontSize: 18,
@@ -459,29 +634,114 @@ class ReportScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Obx(() {
-            if (data.isEmpty) {
-              return Text('Veri yok', style: TextStyle(color: AppTheme.textSecondary));
-            }
-            return Column(
-              children: data.map((item) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      getName(item),
-                      style: TextStyle(color: AppTheme.textPrimary),
-                    ),
-                    Text(
-                      '₺${item.amount.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        color: AppTheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+            final payments = _controller.paymentDistribution;
+            if (payments.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.cardGradient,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              )).toList(),
+                child: const Center(
+                  child: Text(
+                    'Henüz ödeme yok',
+                    style: TextStyle(color: AppTheme.textSecondary),
+                  ),
+                ),
+              );
+            }
+
+            return Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: AppTheme.cardGradient,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: payments.entries.map((entry) {
+                  final percentage = (_controller.totalSales.value > 0)
+                      ? (entry.value / _controller.totalSales.value * 100)
+                      : 0.0;
+                  
+                  Color color;
+                  IconData icon;
+                  
+                  if (entry.key.toLowerCase().contains('nakit') || entry.key.toLowerCase().contains('cash')) {
+                    color = const Color(0xFF10B981);
+                    icon = Icons.money;
+                  } else if (entry.key.toLowerCase().contains('kart') || entry.key.toLowerCase().contains('card')) {
+                    color = const Color(0xFF3B82F6);
+                    icon = Icons.credit_card;
+                  } else {
+                    color = const Color(0xFF8B5CF6);
+                    icon = Icons.payment;
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(icon, color: color, size: 18),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                entry.key,
+                                style: const TextStyle(
+                                  color: AppTheme.textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  '₺${entry.value.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    color: color,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: percentage / 100,
+                            backgroundColor: color.withOpacity(0.2),
+                            valueColor: AlwaysStoppedAnimation<Color>(color),
+                            minHeight: 6,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${percentage.toStringAsFixed(1)}%',
+                          style: const TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
             );
           }),
         ],

@@ -55,9 +55,9 @@ class RegisterModel {
       closingTime: json['closingTime'] != null ? (json['closingTime'] as Timestamp).toDate() : null,
       openingBalance: (json['openingBalance'] ?? 0.0).toDouble(),
       closingBalance: json['closingBalance']?.toDouble(),
-      totalCashSales: (json['totalCashSales'] ?? 0.0).toDouble(),
-      totalCardSales: (json['totalCardSales'] ?? 0.0).toDouble(),
-      totalOtherSales: (json['totalOtherSales'] ?? 0.0).toDouble(),
+      totalCashSales: (json['totalCashSales'] ?? json['cashSales'] ?? 0.0).toDouble(),
+      totalCardSales: (json['totalCardSales'] ?? json['cardSales'] ?? 0.0).toDouble(),
+      totalOtherSales: (json['totalOtherSales'] ?? json['otherSales'] ?? 0.0).toDouble(),
       status: json['status'] ?? 'open',
       notes: json['notes'],
     );

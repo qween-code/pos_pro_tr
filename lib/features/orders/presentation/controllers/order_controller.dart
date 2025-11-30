@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -35,16 +36,26 @@ class OrderController extends GetxController {
   final RxString currentPaymentMethod = 'Nakit'.obs;
   final Rx<Customer?> selectedCustomer = Rx<Customer?>(null);
   
+  StreamSubscription? _refreshSubscription;
+
   @override
   void onInit() {
     super.onInit();
     _orderRepository = HybridOrderRepository(localDb: db, firestore: firestore);
     _customerRepository = HybridCustomerRepository(localDb: db, firestore: firestore);
     _productRepository = HybridProductRepository(localDb: db, firestore: firestore);
+
+    // Listen for refresh events (e.g. from sync)
+    _refreshSubscription = _mediator.on<DashboardRefreshEvent>().listen((event) {
+      if (event.source == 'order_sync') {
+        fetchOrders();
+      }
+    });
   }
 
   @override
   void onClose() {
+    _refreshSubscription?.cancel();
     _orderRepository.dispose();
     _customerRepository.dispose();
     _productRepository.dispose();
@@ -100,7 +111,7 @@ class OrderController extends GetxController {
     currentPayments.clear();
   }
 
-  Future<void> addOrder() async {
+  Future<Order?> addOrder() async {
     // 1. Kasa Kontrolü
     final registerController = Get.isRegistered<RegisterController>() 
         ? Get.find<RegisterController>() 
@@ -108,18 +119,18 @@ class OrderController extends GetxController {
         
     if (registerController.currentRegister.value == null) {
       ErrorHandler.handleValidationError('Satış yapabilmek için önce KASA AÇMALISINIZ!');
-      return;
+      return null;
     }
 
     if (currentOrderItems.isEmpty) {
       ErrorHandler.handleValidationError('Siparişe ürün ekleyin');
-      return;
+      return null;
     }
     
     // Parçalı ödeme kontrolü
     if (currentPayments.isNotEmpty && remainingAmount > 0.01) {
        ErrorHandler.handleValidationError('Ödeme tamamlanmadı. Kalan: ₺${remainingAmount.toStringAsFixed(2)}');
-       return;
+       return null;
     }
 
     isLoading.value = true;
@@ -142,12 +153,16 @@ class OrderController extends GetxController {
       final cashierName = currentRegister?.userName ?? 'Bilinmeyen';
       final cashierId = currentRegister?.userId ?? '';
       
+      // Şube bilgisini kullanıcının region'ından al
+      final authController = Get.find<AuthController>();
+      final branchName = authController.currentUser.value?.region ?? 'Ana Şube';
+      
       final Order newOrder = Order(
         customerId: selectedCustomer.value?.id.toString(),
         customerName: selectedCustomer.value?.name,
         cashierName: cashierName,
         cashierId: cashierId,
-        branchId: currentRegister?.id ?? '',
+        branchId: branchName,
         orderDate: DateTime.now(),
         totalAmount: currentTotal.value,
         taxAmount: currentTax.value,
@@ -513,10 +528,17 @@ class OrderController extends GetxController {
       }
 
       double totalRefundAmount = 0;
-      bool allItemsRefunded = true;
       
       // Sipariş öğelerini al
       final orderItems = await getOrderItems(order.id!);
+
+      // İade tutarını hesapla
+      for (var item in orderItems) {
+        final quantityToRefund = refundQuantities[item.id] ?? 0;
+        if (quantityToRefund > 0) {
+          totalRefundAmount += item.unitPrice * quantityToRefund;
+        }
+      }
       
       // Transaction Service ile atomik işlem
       final transactionService = TransactionService();
@@ -526,12 +548,21 @@ class OrderController extends GetxController {
         orderItems: orderItems,
       );
 
-      // Kasa Güncelleme (Transaction dışında - Opsiyonel)
+      // Kasa Güncelleme (Transaction dışında)
       if (totalRefundAmount > 0) {
         String paymentMethodKey = 'cash';
-        if (order.paymentMethod?.toLowerCase().contains('kart') == true) {
+        if (order.paymentMethod?.toLowerCase().contains('kart') == true || 
+            order.paymentMethod?.toLowerCase().contains('kredi') == true) {
           paymentMethodKey = 'card';
+        } else if (order.paymentMethod?.toLowerCase().contains('veresiye') == true) {
+          paymentMethodKey = 'other';
+           // Veresiye iadesi: Müşteri bakiyesini düşür (borcunu azalt)
+          if (order.customerId != null) {
+            await _customerRepository.updateBalance(order.customerId!, -totalRefundAmount);
+          }
         }
+
+        // Satıştan düş (negatif değer göndererek)
         await registerController.updateSales(-totalRefundAmount, paymentMethodKey);
       }
       
@@ -546,8 +577,6 @@ class OrderController extends GetxController {
     }
   }
 
-
-
   Future<void> printReceipt(Order order) async {
     try {
       await _pdfService.printOrderReceipt(order);
@@ -561,25 +590,53 @@ class OrderController extends GetxController {
     
     isLoading.value = true;
     try {
+      final registerController = Get.isRegistered<RegisterController>() 
+          ? Get.find<RegisterController>() 
+          : Get.put(RegisterController());
+
+      if (registerController.currentRegister.value == null) {
+        ErrorHandler.handleValidationError('İade işlemi için kasa açık olmalıdır');
+        return;
+      }
+
       // 1. Update order status
       await _orderRepository.updateOrderStatus(order.id!, 'refunded');
       
       // 2. Update stock (increase)
-      if (Get.isRegistered<ProductController>()) {
-        final productController = Get.find<ProductController>();
-        for (var item in order.items) {
-          if (item.productId != null) {
-            await productController.updateStock(item.productId!, item.quantity);
-          }
+      ProductController productController;
+      try {
+        productController = Get.find<ProductController>();
+      } catch (_) {
+        productController = Get.put(ProductController());
+      }
+
+      for (var item in order.items) {
+        if (item.productId != null) {
+          await productController.updateStock(item.productId!, item.quantity);
         }
       }
+
+      // 3. Update Register (Decrease Sales)
+      String paymentMethodKey = 'cash';
+      if (order.paymentMethod?.toLowerCase().contains('kart') == true || 
+          order.paymentMethod?.toLowerCase().contains('kredi') == true) {
+        paymentMethodKey = 'card';
+      } else if (order.paymentMethod?.toLowerCase().contains('veresiye') == true) {
+        paymentMethodKey = 'other';
+        // Veresiye iadesi: Müşteri bakiyesini düşür
+        if (order.customerId != null) {
+          await _customerRepository.updateBalance(order.customerId!, -order.totalAmount);
+        }
+      }
+
+      await registerController.updateSales(-order.totalAmount, paymentMethodKey);
       
-      // 3. Refresh orders
+      // 4. Refresh orders
       await fetchOrders();
       
       Get.snackbar(
         'Başarılı',
-        'Sipariş #${order.id!.substring(0, 8)} iade edildi ve stoklar güncellendi.',
+        'Sipariş #${order.id!.substring(0, 8)} iade edildi, stoklar ve kasa güncellendi.',
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -589,6 +646,71 @@ class OrderController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  // Parçalı İade
+  Future<void> processPartialRefund(String orderId, List<Map<String, dynamic>> refundItems) async {
+    isLoading.value = true;
+    try {
+      // 1. Siparişi getir
+      final order = await _orderRepository.getOrderById(orderId);
+      if (order == null) throw Exception('Sipariş bulunamadı');
+
+      // 2. İade tutarını hesapla
+      double refundAmount = 0.0;
+      for (var item in refundItems) {
+        refundAmount += (item['unitPrice'] as double) * (item['quantity'] as int);
+      }
+
+      // 3. Sipariş durumunu güncelle
+      final updatedOrder = order.copyWith(
+        status: 'partial_refunded',
+      );
+
+      await _orderRepository.updateOrder(updatedOrder);
+
+      // 4. Stokları güncelle
+      ProductController productController;
+      try {
+        productController = Get.find<ProductController>();
+      } catch (_) {
+        productController = Get.put(ProductController());
+      }
+
+      for (var item in refundItems) {
+        final productId = item['productId'] as String?;
+        final quantity = item['quantity'] as int;
+        if (productId != null) {
+          await productController.updateStock(productId, quantity);
+        }
+      }
+
+      // 5. Kasayı güncelle (Satışı düşür)
+      // Ödeme yöntemini bul
+      String paymentMethodKey = 'cash';
+      if (order.paymentMethod?.toLowerCase().contains('kart') == true || 
+          order.paymentMethod?.toLowerCase().contains('kredi') == true) {
+        paymentMethodKey = 'card';
+      }
+
+      final registerController = Get.isRegistered<RegisterController>() 
+          ? Get.find<RegisterController>() 
+          : Get.put(RegisterController());
+          
+      await registerController.updateSales(-refundAmount, paymentMethodKey);
+
+      _showSuccessDialog(updatedOrder.copyWith(totalAmount: refundAmount)); // İade tutarını göster
+      
+      // Listeyi yenile
+      _mediator.publish(DashboardRefreshEvent(source: 'order_refund'));
+      await fetchOrders();
+      
+    } catch (e) {
+      ErrorHandler.handleApiError(e, customMessage: 'Parçalı iade işlemi başarısız');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
 }
 
 class PendingOrder {

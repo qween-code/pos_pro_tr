@@ -3,12 +3,14 @@ class UserModel {
   final String name;
   final String email;
   final String role; // 'admin', 'cashier', 'manager' gibi roller
+  final String? region; // Şube bilgisi (Ana Şube, İstanbul, Ankara, İzmir)
 
   UserModel({
     required this.id,
     required this.name,
     required this.email,
     required this.role,
+    this.region,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,7 @@ class UserModel {
       name: json['name'],
       email: json['email'],
       role: json['role'],
+      region: json['region'],
     );
   }
 
@@ -26,6 +29,7 @@ class UserModel {
       'name': name,
       'email': email,
       'role': role,
+      if (region != null) 'region': region,
     };
   }
 

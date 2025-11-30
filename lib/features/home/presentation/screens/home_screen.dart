@@ -7,6 +7,7 @@ import '../../../register/presentation/controllers/register_controller.dart';
 import '../../../register/presentation/screens/open_register_screen.dart';
 import '../../../register/presentation/screens/close_register_screen.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../controllers/dashboard_controller.dart';
 
 /// Ana Kontrol Paneli - Modern Dashboard
 class HomeScreen extends StatefulWidget {
@@ -18,25 +19,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
-  // Dashboard Metrics
-  double todaySales = 0.0;
-  int todayOrders = 0;
-  int lowStockCount = 0;
-  int totalCustomers = 0;
-  double weekSales = 0.0;
-  double monthSales = 0.0;
-  bool isLoading = true;
-
-  // Animation Controllers
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-
+  
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
-    _loadDashboardData();
+    // DashboardController will load data onReady
   }
 
   void _initializeAnimations() {
@@ -57,87 +47,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  Future<void> _loadDashboardData() async {
-    setState(() => isLoading = true);
-    
-    try {
-      final now = DateTime.now();
-      final startOfDay = DateTime(now.year, now.month, now.day);
-      final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-      final startOfMonth = DateTime(now.year, now.month, 1);
-
-      // Günlük satış ve sipariş sayısı
-      final todayOrders = await _firestore
-          .collection('orders')
-          .where('orderDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('status', isEqualTo: 'completed')
-          .get();
-
-      double dailySales = 0.0;
-      for (var doc in todayOrders.docs) {
-        dailySales += (doc.data()['totalAmount'] as num?)?.toDouble() ?? 0.0;
-      }
-
-      // Haftalık satış
-      final weekOrders = await _firestore
-          .collection('orders')
-          .where('orderDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfWeek))
-          .where('status', isEqualTo: 'completed')
-          .get();
-
-      double weeklySales = 0.0;
-      for (var doc in weekOrders.docs) {
-        weeklySales += (doc.data()['totalAmount'] as num?)?.toDouble() ?? 0.0;
-      }
-
-      // Aylık satış
-      final monthOrders = await _firestore
-          .collection('orders')
-          .where('orderDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
-          .where('status', isEqualTo: 'completed')
-          .get();
-
-      double monthlySales = 0.0;
-      for (var doc in monthOrders.docs) {
-        monthlySales += (doc.data()['totalAmount'] as num?)?.toDouble() ?? 0.0;
-      }
-
-      // Düşük stok
-      final products = await _firestore
-          .collection('products')
-          .where('stock', isLessThan: 10)
-          .get();
-
-      // Müşteri sayısı
-      final customers = await _firestore.collection('customers').get();
-
-      setState(() {
-        todaySales = dailySales;
-        this.todayOrders = todayOrders.docs.length;
-        weekSales = weeklySales;
-        monthSales = monthlySales;
-        lowStockCount = products.docs.length;
-        totalCustomers = customers.docs.length;
-        isLoading = false;
-      });
-
-      debugPrint('📊 Dashboard yüklendi: ₺${dailySales.toStringAsFixed(2)}');
-    } catch (e) {
-      debugPrint('❌ Dashboard hatası: $e');
-      setState(() => isLoading = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final registerController = Get.put(RegisterController());
     final authController = Get.find<AuthController>();
+    final dashboardController = Get.put(DashboardController());
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _loadDashboardData,
+          onRefresh: dashboardController.loadDashboardData,
           color: AppTheme.primary,
           backgroundColor: AppTheme.surface,
           child: SingleChildScrollView(
@@ -153,12 +73,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   const SizedBox(height: 24),
                   _buildQuickActions(authController),
                   const SizedBox(height: 24),
-                  _buildRevenueCards(),
+                  _buildRevenueCards(dashboardController),
                   const SizedBox(height: 24),
-                  _buildMetricsGrid(),
+                  _buildMetricsGrid(dashboardController),
                   const SizedBox(height: 24),
                   _buildActionCards(authController),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 80), // Increased bottom padding to prevent overflow
                 ],
               ),
             ),
@@ -250,6 +170,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ],
       ),
     );
+  }
+
+  void _loadDashboardData() {
+    final dashboardController = Get.find<DashboardController>();
+    dashboardController.loadDashboardData();
   }
 
   Widget _buildHeaderIconButton(IconData icon, VoidCallback onTap) {
@@ -423,7 +348,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildRevenueCards() {
+  Widget _buildRevenueCards(DashboardController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -438,42 +363,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(height: 16),
-          if (isLoading)
-            const Center(child: CircularProgressIndicator(color: AppTheme.primary))
-          else
-            Row(
-              children: [
-                Expanded(
-                  child: _buildRevenueCard(
-                    'Bugün',
-                    todaySales,
-                    Icons.today_rounded,
-                    const Color(0xFF10B981),
-                    onTap: () => Get.toNamed('/reports', arguments: {'period': 'today'}),
-                  ),
+          Obx(() => Row(
+            children: [
+              Expanded(
+                child: _buildRevenueCard(
+                  'Bugün',
+                  controller.todaysSales.value,
+                  Icons.today,
+                  const Color(0xFF3B82F6),
+                  onTap: () => Get.toNamed('/reports', arguments: 'today'),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildRevenueCard(
-                    'Bu Hafta',
-                    weekSales,
-                    Icons.date_range_rounded,
-                    const Color(0xFF3B82F6),
-                    onTap: () => Get.toNamed('/reports', arguments: {'period': 'week'}),
-                  ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildRevenueCard(
+                  'Bu Hafta',
+                  controller.weeklySales.value,
+                  Icons.calendar_view_week,
+                  const Color(0xFF8B5CF6),
+                  onTap: () => Get.toNamed('/reports', arguments: 'week'),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildRevenueCard(
-                    'Bu Ay',
-                    monthSales,
-                    Icons.calendar_month_rounded,
-                    const Color(0xFF8B5CF6),
-                    onTap: () => Get.toNamed('/reports', arguments: {'period': 'month'}),
-                  ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildRevenueCard(
+                  'Bu Ay',
+                  controller.monthlySales.value,
+                  Icons.calendar_month,
+                  const Color(0xFFEC4899),
+                  onTap: () => Get.toNamed('/reports', arguments: 'month'),
                 ),
-              ],
-            ),
+              ),
+            ],
+          )),
         ],
       ),
     );
@@ -484,7 +406,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           gradient: AppTheme.cardGradient,
           borderRadius: BorderRadius.circular(16),
@@ -492,10 +414,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: color, size: 24),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               period,
               style: const TextStyle(
@@ -507,15 +429,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
-            Text(
-              '₺${amount.toStringAsFixed(2)}',
-              style: TextStyle(
-                color: color,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '₺${amount.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: color,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -523,7 +447,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildMetricsGrid() {
+  Widget _buildMetricsGrid(DashboardController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -538,47 +462,35 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
           const SizedBox(height: 16),
-          if (isLoading)
-            const Center(child: CircularProgressIndicator(color: AppTheme.primary))
-          else
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.3,
-              children: [
-                _buildMetricCard(
-                  'Sipariş',
-                  todayOrders.toString(),
-                  Icons.shopping_bag_rounded,
-                  const Color(0xFF3B82F6),
-                  onTap: () => Get.toNamed('/orders'),
-                ),
-                _buildMetricCard(
-                  'Düşük Stok',
-                  lowStockCount.toString(),
-                  Icons.warning_rounded,
-                  const Color(0xFFF59E0B),
-                  onTap: () => Get.toNamed('/products', arguments: {'filter': 'low_stock'}),
-                ),
-                _buildMetricCard(
-                  'Müşteri',
-                  totalCustomers.toString(),
-                  Icons.people_rounded,
-                  const Color(0xFF8B5CF6),
-                  onTap: () => Get.toNamed('/customers'),
-                ),
-                _buildMetricCard(
-                  'Raporlar',
-                  'Görüntüle',
-                  Icons.analytics_rounded,
-                  AppTheme.primary,
-                  onTap: () => Get.toNamed('/reports'),
-                ),
-              ],
-            ),
+          Obx(() => GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 3,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 0.85, // Dikeyde daha fazla yer açıldı (1.0 -> 0.85)
+            children: [
+              _buildMetricCard(
+                'Sipariş',
+                controller.todaysOrders.value.toString(),
+                Icons.shopping_bag_rounded,
+                const Color(0xFF3B82F6),
+                onTap: () => Get.toNamed('/orders'),
+              ),
+              _buildMetricCard(
+                'Stok',
+                controller.lowStockCount.value.toString(),
+                Icons.inventory_2_rounded,
+                const Color(0xFFF59E0B),
+              ),
+              _buildMetricCard(
+                'Müşteri',
+                controller.totalCustomers.value.toString(),
+                Icons.people_alt_rounded,
+                const Color(0xFF10B981),
+              ),
+            ],
+          )),
         ],
       ),
     );
@@ -595,7 +507,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           gradient: AppTheme.cardGradient,
           borderRadius: BorderRadius.circular(16),
@@ -603,43 +515,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: color, size: 24),
+              child: Icon(icon, color: color, size: 20),
             ),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],

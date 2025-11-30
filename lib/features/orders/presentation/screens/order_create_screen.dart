@@ -9,6 +9,7 @@ import '../../../customers/data/models/customer_model.dart';
 import '../../../../core/widgets/barcode_scanner_screen.dart';
 import '../../../../core/utils/error_handler.dart';
 import '../../../../core/constants/theme_constants.dart';
+import 'order_receipt_screen.dart';
 
 class OrderCreateScreen extends StatefulWidget {
   const OrderCreateScreen({super.key});
@@ -811,6 +812,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
   void _showCustomerSelectionDialog() {
     final customerController = Get.find<CustomerController>();
     customerController.fetchCustomers();
+    final RxString searchQuery = ''.obs;
 
     Get.dialog(
       Dialog(
@@ -818,7 +820,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: SizedBox(
           width: 400,
-          height: 500,
+          height: 600,
           child: Column(
             children: [
               Padding(
@@ -834,12 +836,59 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                   ],
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                child: TextField(
+                  onChanged: (val) => searchQuery.value = val.toLowerCase(),
+                  style: const TextStyle(color: AppTheme.textPrimary),
+                  decoration: InputDecoration(
+                    hintText: 'İsim veya Telefon ile ara...',
+                    hintStyle: const TextStyle(color: AppTheme.textSecondary),
+                    prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+                    filled: true,
+                    fillColor: AppTheme.background,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
               Divider(height: 1, color: AppTheme.primary.withOpacity(0.2)),
               Expanded(
                 child: Obx(() {
-                  final customers = customerController.customers;
+                  var customers = customerController.customers.toList();
+                  
+                  if (searchQuery.value.isNotEmpty) {
+                    customers = customers.where((c) => 
+                      c.name.toLowerCase().contains(searchQuery.value) ||
+                      (c.phone != null && c.phone!.contains(searchQuery.value))
+                    ).toList();
+                  }
+
                   if (customers.isEmpty) {
-                    return const Center(child: Text('Müşteri bulunamadı', style: TextStyle(color: AppTheme.textSecondary)));
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Müşteri bulunamadı', style: TextStyle(color: AppTheme.textSecondary)),
+                          const SizedBox(height: 8),
+                          if (searchQuery.value.isNotEmpty)
+                            TextButton.icon(
+                              onPressed: () {
+                                // Hızlı müşteri ekleme özelliği eklenebilir
+                                // Şimdilik sadece kapatıyoruz
+                                Get.back();
+                                // TODO: Navigate to add customer screen with pre-filled name
+                              }, 
+                              icon: const Icon(Icons.person_add),
+                              label: const Text('Yeni Müşteri Ekle'),
+                            ),
+                        ],
+                      ),
+                    );
                   }
 
                   return ListView.builder(
@@ -850,7 +899,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                         leading: CircleAvatar(
                           backgroundColor: AppTheme.primary.withOpacity(0.2),
                           child: Text(
-                            customer.name[0].toUpperCase(),
+                            customer.name.isNotEmpty ? customer.name[0].toUpperCase() : '?',
                             style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -873,43 +922,242 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
   }
 
   void _showConfirmOrderDialog() {
+    // Reset payments initially
+    orderController.clearPayments();
+    
     Get.dialog(
       Dialog(
         backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: SizedBox(
+          width: 450,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                const Text(
+                  'Ödeme Ekranı',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                ),
+                const SizedBox(height: 24),
+                
+                // Totals
+                Obx(() {
+                  final total = orderController.currentTotal.value;
+                  final remaining = orderController.remainingAmount;
+                  
+                  return Column(
+                    children: [
+                      _buildInfoRow('Toplam Tutar', '₺${total.toStringAsFixed(2)}', isBold: true),
+                      const SizedBox(height: 8),
+                      _buildInfoRow('Kalan Tutar', '₺${remaining.toStringAsFixed(2)}', 
+                        color: remaining > 0.01 ? AppTheme.error : AppTheme.primary, isBold: true, fontSize: 20),
+                    ],
+                  );
+                }),
+                
+                const Divider(height: 32),
+                
+                // Payment List
+                Flexible(
+                  child: Obx(() {
+                    final payments = orderController.currentPayments;
+                    if (payments.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Text('Henüz ödeme eklenmedi', style: TextStyle(color: AppTheme.textSecondary)),
+                      );
+                    }
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: payments.length,
+                      separatorBuilder: (context, index) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final payment = payments[index];
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.background,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(payment.method, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                              Row(
+                                children: [
+                                  Text('₺${payment.amount.toStringAsFixed(2)}', style: const TextStyle(color: AppTheme.textPrimary)),
+                                  const SizedBox(width: 8),
+                                  InkWell(
+                                    onTap: () {
+                                      orderController.clearPayments(); // Simple reset for now
+                                    },
+                                    child: const Icon(Icons.close, size: 16, color: AppTheme.error),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  }),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Payment Buttons
+                Obx(() {
+                  final remaining = orderController.remainingAmount;
+                  if (remaining <= 0.01) return const SizedBox.shrink();
+                  
+                  return Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(child: _buildPaymentActionButton('Nakit', Icons.money, AppTheme.primary, remaining)),
+                          const SizedBox(width: 8),
+                          Expanded(child: _buildPaymentActionButton('Kredi Kartı', Icons.credit_card, AppTheme.secondary, remaining)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(child: _buildPaymentActionButton('Yemek Kartı', Icons.restaurant, Colors.orange, remaining)),
+                          const SizedBox(width: 8),
+                          Expanded(child: _buildPaymentActionButton('Veresiye', Icons.account_balance_wallet, Colors.red, remaining)),
+                        ],
+                      ),
+                    ],
+                  );
+                }),
+                
+                const SizedBox(height: 24),
+                
+                // Actions
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Get.back(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: const BorderSide(color: AppTheme.primary),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('İptal', style: TextStyle(color: AppTheme.primary)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Obx(() {
+                        final remaining = orderController.remainingAmount;
+                        final isComplete = remaining <= 0.01;
+                        
+                        return ElevatedButton(
+                          onPressed: isComplete ? () async {
+                            final newOrder = await orderController.addOrder();
+                            if (newOrder != null) {
+                              // Önce bu ekranı kapat
+                              Get.back();
+                              // Sonra fiş ekranını aç
+                              Get.to(() => OrderReceiptScreen(order: newOrder));
+                            }
+                          } : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            foregroundColor: AppTheme.background,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            disabledBackgroundColor: Colors.grey.shade300,
+                          ),
+                          child: const Text('Siparişi Tamamla', style: TextStyle(fontWeight: FontWeight.bold)),
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentActionButton(String label, IconData icon, Color color, double maxAmount) {
+    return ElevatedButton.icon(
+      onPressed: () {
+        _showAmountInputDialog(label, maxAmount);
+      },
+      icon: Icon(icon, size: 18),
+      label: Text(label, style: const TextStyle(fontSize: 13)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  void _showAmountInputDialog(String method, double maxAmount) {
+    final controller = TextEditingController(text: maxAmount.toStringAsFixed(2));
+    
+    Get.dialog(
+      Dialog(
+        backgroundColor: AppTheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.payment, size: 48, color: AppTheme.primary),
-              ),
+              Text('$method Tutarı', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textPrimary)),
               const SizedBox(height: 16),
-              const Text(
-                'Ödeme Yöntemi Seçin',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-              ),
-              const SizedBox(height: 24),
-              _buildPaymentButton('Nakit', Icons.money, AppTheme.primary),
-              const SizedBox(height: 12),
-              _buildPaymentButton('Kredi Kartı', Icons.credit_card, AppTheme.secondary),
-              const SizedBox(height: 12),
-              _buildPaymentButton('Havale/EFT', Icons.account_balance, const Color(0xFFFFA500)),
-              const SizedBox(height: 24),
-              OutlinedButton(
-                onPressed: () => Get.back(),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppTheme.primary),
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              TextField(
+                controller: controller,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                autofocus: true,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  suffixText: '₺',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  filled: true,
+                  fillColor: AppTheme.background,
                 ),
-                child: const Text('İptal', style: TextStyle(color: AppTheme.primary)),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Get.back(), 
+                    child: const Text('İptal', style: TextStyle(color: AppTheme.textSecondary))
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      final amount = double.tryParse(controller.text.replaceAll(',', '.')) ?? 0.0;
+                      if (amount > 0 && amount <= maxAmount + 0.01) {
+                        orderController.addPayment(method, amount);
+                        Get.back();
+                      } else {
+                        ErrorHandler.handleValidationError('Geçersiz tutar!');
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: AppTheme.background,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('Ekle'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -918,31 +1166,17 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
     );
   }
 
-  Widget _buildPaymentButton(String label, IconData icon, Color color) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: () async {
-          try {
-            Get.back(); // Close payment dialog
-            orderController.setPaymentMethod(label);
-            
-            // Complete order
-            await orderController.addOrder();
-          } catch (e) {
-            debugPrint('Ödeme hatası: $e');
-            ErrorHandler.handleApiError(e, customMessage: 'Ödeme alınamadı');
-          }
-        },
-        icon: Icon(icon, color: AppTheme.background),
-        label: Text(label, style: const TextStyle(fontSize: 16)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: AppTheme.background,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      ),
+  Widget _buildInfoRow(String label, String value, {bool isBold = false, Color? color, double? fontSize}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(color: AppTheme.textSecondary, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+        Text(value, style: TextStyle(
+          color: color ?? AppTheme.textPrimary, 
+          fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+          fontSize: fontSize,
+        )),
+      ],
     );
   }
 
