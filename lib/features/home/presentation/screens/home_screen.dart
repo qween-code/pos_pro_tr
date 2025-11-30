@@ -449,6 +449,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     todaySales,
                     Icons.today_rounded,
                     const Color(0xFF10B981),
+                    onTap: () => Get.toNamed('/reports', arguments: {'period': 'today'}),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -458,6 +459,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     weekSales,
                     Icons.date_range_rounded,
                     const Color(0xFF3B82F6),
+                    onTap: () => Get.toNamed('/reports', arguments: {'period': 'week'}),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -467,6 +469,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     monthSales,
                     Icons.calendar_month_rounded,
                     const Color(0xFF8B5CF6),
+                    onTap: () => Get.toNamed('/reports', arguments: {'period': 'month'}),
                   ),
                 ),
               ],
@@ -476,42 +479,46 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildRevenueCard(String period, double amount, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: AppTheme.cardGradient,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 12),
-          Text(
-            period,
-            style: const TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+  Widget _buildRevenueCard(String period, double amount, IconData icon, Color color, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: AppTheme.cardGradient,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 12),
+            Text(
+              period,
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '₺${amount.toStringAsFixed(2)}',
-            style: TextStyle(
-              color: color,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            const SizedBox(height: 4),
+            Text(
+              '₺${amount.toStringAsFixed(2)}',
+              style: TextStyle(
+                color: color,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -547,6 +554,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   todayOrders.toString(),
                   Icons.shopping_bag_rounded,
                   const Color(0xFF3B82F6),
+                  onTap: () => Get.toNamed('/orders'),
                 ),
                 _buildMetricCard(
                   'Düşük Stok',

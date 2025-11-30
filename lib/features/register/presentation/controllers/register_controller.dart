@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../core/utils/error_handler.dart';
 import '../../data/models/register_model.dart';
 import '../../data/repositories/register_repository.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 
 class RegisterController extends GetxController {
   final RegisterRepository _repository = RegisterRepository();
@@ -33,8 +34,9 @@ class RegisterController extends GetxController {
   Future<bool> openRegister(double openingBalance, String userName) async {
     isLoading.value = true;
     try {
+      final authController = Get.find<AuthController>();
       final newRegister = RegisterModel(
-        userId: 'current_user_id', // Auth servisinden alınmalı
+        userId: authController.currentUser.value?.id ?? 'unknown_user',
         userName: userName,
         openingTime: DateTime.now(),
         openingBalance: openingBalance,

@@ -8,6 +8,7 @@ import '../../data/models/order_model.dart';
 import '../../data/repositories/hybrid_order_repository.dart';
 import '../../../products/data/models/product_model.dart';
 import '../../../products/data/repositories/hybrid_product_repository.dart';
+import '../../../products/presentation/controllers/product_controller.dart';
 import '../../../customers/data/models/customer_model.dart';
 import '../../../customers/data/repositories/hybrid_customer_repository.dart';
 import '../../../register/presentation/controllers/register_controller.dart';
@@ -552,6 +553,40 @@ class OrderController extends GetxController {
       await _pdfService.printOrderReceipt(order);
     } catch (e) {
       ErrorHandler.handleApiError(e, customMessage: 'Fiş yazdırılamadı');
+    }
+  }
+
+  Future<void> refundOrder(Order order) async {
+    if (order.id == null) return;
+    
+    isLoading.value = true;
+    try {
+      // 1. Update order status
+      await _orderRepository.updateOrderStatus(order.id!, 'refunded');
+      
+      // 2. Update stock (increase)
+      if (Get.isRegistered<ProductController>()) {
+        final productController = Get.find<ProductController>();
+        for (var item in order.items) {
+          if (item.productId != null) {
+            await productController.updateStock(item.productId!, item.quantity);
+          }
+        }
+      }
+      
+      // 3. Refresh orders
+      await fetchOrders();
+      
+      Get.snackbar(
+        'Başarılı',
+        'Sipariş #${order.id!.substring(0, 8)} iade edildi ve stoklar güncellendi.',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      ErrorHandler.handleApiError(e, customMessage: 'İade işlemi başarısız');
+    } finally {
+      isLoading.value = false;
     }
   }
 }

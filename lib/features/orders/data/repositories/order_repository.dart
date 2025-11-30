@@ -58,6 +58,13 @@ class OrderRepository {
     }).toList();
   }
 
+  Future<void> updateOrderStatus(String orderId, String status) async {
+    await _firestore.collection(_orderCollectionName).doc(orderId).update({
+      'status': status,
+    });
+  }
+
+
   Future<void> updateOrder(pos_order.Order order) async {
     if (order.id == null) throw Exception('Sipariş ID bulunamadı');
     await _firestore.collection(_orderCollectionName).doc(order.id).update(order.toJson());

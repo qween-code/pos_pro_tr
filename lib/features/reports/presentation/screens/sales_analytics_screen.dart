@@ -98,6 +98,7 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
         final amount = order.totalAmount;
         final method = order.paymentMethod ?? 'Bilinmeyen';
         final cashier = order.cashierName ?? 'Bilinmeyen';
+        debugPrint('Order ${order.id}: Cashier=$cashier'); // Debug log
         final hour = order.orderDate.hour;
 
         sales += amount;
@@ -888,7 +889,7 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
               _buildReportRow('Toplam Satış', '₺${totalSales.toStringAsFixed(2)}', isBold: true),
               _buildReportRow('Toplam Sipariş', '$totalOrders Adet'),
               const Divider(height: 32, color: AppTheme.primary),
-              ...paymentMethods.entries.map((e) => _buildReportRow(e.key, '₺${e.value.toStringAsFixed(2)}')),
+              ...paymentMethods.entries.map((e) => _buildReportRow(e.key, '₺${e.value.toStringAsFixed(2)}')).toList(),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -1028,12 +1029,7 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () {
                         Get.back();
-                        Get.snackbar(
-                          'Bilgi',
-                          'İade işlemi özelliği yakında eklenecek',
-                          backgroundColor: Colors.orange,
-                          colorText: Colors.white,
-                        );
+                        Get.find<OrderController>().refundOrder(order);
                       },
                       icon: const Icon(Icons.replay_rounded),
                       label: const Text('İade İşlemi'),

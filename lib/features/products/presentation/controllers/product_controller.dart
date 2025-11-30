@@ -219,4 +219,23 @@ class ProductController extends GetxController {
         break;
     }
   }
+
+  Future<void> updateStock(String productId, int quantityChange) async {
+    try {
+      final product = await _productRepository.getProductById(productId);
+      if (product != null) {
+        final newStock = product.stock + quantityChange;
+        await _productRepository.updateProduct(product.copyWith(stock: newStock));
+        
+        // Update local list
+        final index = products.indexWhere((p) => p.id == productId);
+        if (index != -1) {
+          products[index] = products[index].copyWith(stock: newStock);
+        }
+      }
+    } catch (e) {
+      debugPrint('Stok güncellenemedi: $e');
+      rethrow;
+    }
+  }
 }
