@@ -783,6 +783,29 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
                         itemCount: _currentFilteredOrders.length,
                         separatorBuilder: (context, index) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
+                          final order = _currentFilteredOrders[index];
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            child: ListTile(
+                              onTap: () => _showOrderDetailDialog(order),
+                              leading: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primary.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '#${index + 1}',
+                                    style: const TextStyle(
+                                      color: AppTheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
                               title: Text(
                                 'Sipariş #${order.id?.substring(0, 8) ?? "---"}',
                                 style: const TextStyle(fontWeight: FontWeight.bold),
