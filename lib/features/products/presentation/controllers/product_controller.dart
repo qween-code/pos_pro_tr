@@ -6,9 +6,15 @@ import '../../../../core/services/notification_service.dart';
 import '../../../../core/database/database_instance.dart';
 import '../../data/models/product_model.dart';
 import '../../data/repositories/hybrid_product_repository.dart';
+import '../../../../core/mediator/app_mediator.dart';
+import '../../../../core/events/app_events.dart';
+import 'dart:async';
 
 class ProductController extends GetxController {
   late final HybridProductRepository _productRepository;
+  final AppMediator _mediator = AppMediator();
+  StreamSubscription? _orderEventSubscription;
+  
   final RxList<Product> products = <Product>[].obs;
   final RxBool isLoading = false.obs;
 
@@ -20,10 +26,16 @@ class ProductController extends GetxController {
       localDb: db,
       firestore: firestore,
     );
+    
+    // 📢 MEDIATOR: Subscribe to OrderCompletedEvent for automatic stock updates
+    _orderEventSubscription = _mediator.on<OrderCompletedEvent>().listen((event) {
+      _handleOrderCompleted(event);
+    });
   }
 
   @override
   void onClose() {
+    _orderEventSubscription?.cancel();
     _productRepository.dispose(); // Listener'ı temizle
     super.onClose();
   }
@@ -32,6 +44,33 @@ class ProductController extends GetxController {
   void onReady() {
     super.onReady();
     fetchProducts();
+  }
+  
+  /// Handle order completion - check for low stock
+  Future<void> _handleOrderCompleted(OrderCompletedEvent event) async {
+    try {
+      // Check each item for low stock after the order
+      for (var item in event.items) {
+        final product = await _productRepository.getProductById(item.productId);
+        if (product != null && product.stock <= product.criticalStockLevel) {
+          // Publish low stock alert
+          _mediator.publish(LowStockAlertEvent(
+            productId: product.id!,
+            productName: product.name,
+            currentStock: product.stock,
+            criticalLevel: product.criticalStockLevel,
+          ));
+          
+          // Show notification
+          debugPrint('⚠️ LOW STOCK ALERT: ${product.name} (${product.stock} left)');
+        }
+      }
+      
+      // Refresh products list
+      await fetchProducts();
+    } catch (e) {
+      debugPrint('Error handling order completed: $e');
+    }
   }
 
   Future<void> fetchProducts({String? filter, String? category}) async {

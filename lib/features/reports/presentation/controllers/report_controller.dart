@@ -6,9 +6,14 @@ import '../../../../core/utils/error_handler.dart';
 import '../../../orders/data/models/order_model.dart' as models;
 import '../../../orders/data/repositories/hybrid_order_repository.dart';
 import '../../../../core/database/database_instance.dart';
+import '../../../../core/mediator/app_mediator.dart';
+import '../../../../core/events/app_events.dart';
+import 'dart:async';
 
 class ReportController extends GetxController {
   late final HybridOrderRepository _orderRepository;
+  final AppMediator _mediator = AppMediator();
+  StreamSubscription? _orderEventSubscription;
 
   @override
   void onInit() {
@@ -18,6 +23,19 @@ class ReportController extends GetxController {
       localDb: dbInstance.database,
       firestore: FirebaseFirestore.instance,
     );
+    
+    // 📢 MEDIATOR: Subscribe to OrderCompletedEvent for dashboard refresh
+    _orderEventSubscription = _mediator.on<OrderCompletedEvent>().listen((event) {
+      debugPrint('📊 Dashboard Auto-Refresh: Order ${event.orderId} completed');
+      loadDashboardData();
+    });
+  }
+  
+  @override
+  void onClose() {
+    _orderEventSubscription?.cancel();
+    _orderRepository.dispose();
+    super.onClose();
   }
   
   final RxBool isLoading = false.obs;
