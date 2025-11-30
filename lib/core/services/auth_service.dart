@@ -1,11 +1,18 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:google_sign_in/google_sign_in.dart'; // Geçici olarak kaldırıldı
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../features/auth/data/models/user_model.dart';
+import '../../core/database/database_instance.dart';
+import '../../features/auth/data/repositories/hybrid_user_repository.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  late final HybridUserRepository _userRepository;
+
+  AuthService() {
+    _userRepository = HybridUserRepository(localDb: db, firestore: _firestore);
+  }
 
   // Mevcut kullanıcıyı al
   User? get currentUser => _auth.currentUser;
@@ -21,39 +28,41 @@ class AuthService {
         password: password,
       );
 
-      // Firestore'dan kullanıcı bilgilerini al
-      final userDoc = await _firestore
-          .collection('users')
-          .doc(credential.user!.uid)
-          .get();
-
-      if (userDoc.exists) {
-        final userData = userDoc.data()!;
-        return UserModel(
-          id: credential.user!.uid,
-          name: userData['name'] ?? credential.user!.displayName ?? 'Kullanıcı',
-          email: credential.user!.email ?? email,
-          role: userData['role'] ?? 'user',
-        );
-      } else {
-        // Kullanıcı Firestore'da yoksa varsayılan oluştur
-        final newUser = UserModel(
-          id: credential.user!.uid,
-          name: credential.user!.displayName ?? 'Kullanıcı',
-          email: credential.user!.email ?? email,
-          role: 'user',
-        );
-
-        // Firestore'a kaydet
-        await _firestore.collection('users').doc(credential.user!.uid).set({
-          'name': newUser.name,
-          'email': newUser.email,
-          'role': newUser.role,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-
-        return newUser;
+      // Hibrit repository'den kullanıcıyı al (önce local, yoksa firebase)
+      // Ancak signIn durumunda Firebase'den taze veriyi çekip locale kaydetmek daha mantıklı olabilir
+      // HybridUserRepository listener'ı zaten Firebase değişikliklerini dinliyor.
+      // Biz burada manuel olarak da check edebiliriz.
+      
+      // Önce local'e bak
+      var userModel = await _userRepository.getUser(credential.user!.uid);
+      
+      if (userModel == null) {
+        // Localde yoksa Firestore'dan çek
+        final userDoc = await _firestore.collection('users').doc(credential.user!.uid).get();
+        if (userDoc.exists) {
+           final userData = userDoc.data()!;
+           userModel = UserModel(
+             id: credential.user!.uid,
+             name: userData['name'] ?? credential.user!.displayName ?? 'Kullanıcı',
+             email: credential.user!.email ?? email,
+             role: userData['role'] ?? 'user',
+           );
+           // Locale kaydet
+           await _userRepository.saveUser(userModel);
+        } else {
+           // Firestore'da da yoksa oluştur
+           userModel = UserModel(
+             id: credential.user!.uid,
+             name: credential.user!.displayName ?? 'Kullanıcı',
+             email: credential.user!.email ?? email,
+             role: 'user',
+           );
+           await _userRepository.saveUser(userModel);
+        }
       }
+      
+      return userModel;
+
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     } catch (e) {
@@ -76,7 +85,7 @@ class AuthService {
       // Kullanıcı adını güncelle
       await credential.user!.updateDisplayName(name);
 
-      // Firestore'a kullanıcı bilgilerini kaydet
+      // Kullanıcı modelini oluştur
       final newUser = UserModel(
         id: credential.user!.uid,
         name: name,
@@ -84,12 +93,8 @@ class AuthService {
         role: 'user',
       );
 
-      await _firestore.collection('users').doc(credential.user!.uid).set({
-        'name': name,
-        'email': email,
-        'role': 'user',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      // Hibrit repository ile kaydet (hem local hem firebase)
+      await _userRepository.saveUser(newUser);
 
       return newUser;
     } on FirebaseAuthException catch (e) {
@@ -99,8 +104,7 @@ class AuthService {
     }
   }
 
-  // Google ile giriş yapma - GEÇİCİ OLARAK KALDIRILDI
-  /*
+  // Google ile giriş yapma
   Future<UserModel> signInWithGoogle() async {
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn();
@@ -119,42 +123,37 @@ class AuthService {
       final UserCredential userCredential = await _auth.signInWithCredential(credential);
       final User user = userCredential.user!;
 
-      // Firestore'dan kullanıcı bilgilerini al
-      final userDoc = await _firestore.collection('users').doc(user.uid).get();
-
-      if (userDoc.exists) {
-        final userData = userDoc.data()!;
-        return UserModel(
-          id: user.uid,
-          name: userData['name'] ?? user.displayName ?? 'Kullanıcı',
-          email: user.email ?? '',
-          role: userData['role'] ?? 'user',
-        );
-      } else {
-        // Kullanıcı Firestore'da yoksa oluştur
-        final newUser = UserModel(
-          id: user.uid,
-          name: user.displayName ?? 'Kullanıcı',
-          email: user.email ?? '',
-          role: 'user',
-        );
-
-        await _firestore.collection('users').doc(user.uid).set({
-          'name': newUser.name,
-          'email': newUser.email,
-          'role': newUser.role,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-
-        return newUser;
+      // Kullanıcıyı kontrol et veya oluştur
+      var userModel = await _userRepository.getUser(user.uid);
+      
+      if (userModel == null) {
+        final userDoc = await _firestore.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+           final userData = userDoc.data()!;
+           userModel = UserModel(
+             id: user.uid,
+             name: userData['name'] ?? user.displayName ?? 'Kullanıcı',
+             email: user.email ?? '',
+             role: userData['role'] ?? 'user',
+           );
+        } else {
+           userModel = UserModel(
+             id: user.uid,
+             name: user.displayName ?? 'Kullanıcı',
+             email: user.email ?? '',
+             role: 'user',
+           );
+        }
+        await _userRepository.saveUser(userModel);
       }
+
+      return userModel;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     } catch (e) {
       throw Exception('Google ile giriş sırasında hata: $e');
     }
   }
-  */
 
   // Şifre sıfırlama
   Future<void> resetPassword(String email) async {
@@ -170,7 +169,8 @@ class AuthService {
   // Çıkış yapma
   Future<void> signOut() async {
     try {
-      // await GoogleSignIn().signOut(); // Geçici olarak kaldırıldı
+      final googleSignIn = GoogleSignIn();
+      await googleSignIn.signOut();
       await _auth.signOut();
     } catch (e) {
       throw Exception('Çıkış işlemi sırasında bir hata oluştu: $e');
@@ -180,15 +180,23 @@ class AuthService {
   // Kullanıcı bilgilerini Firestore'dan al
   Future<UserModel?> getUserData(String uid) async {
     try {
+      // Önce local/hibrit repository'den dene
+      final user = await _userRepository.getUser(uid);
+      if (user != null) return user;
+
+      // Yoksa Firestore'dan manuel çek (fallback)
       final userDoc = await _firestore.collection('users').doc(uid).get();
       if (userDoc.exists) {
         final userData = userDoc.data()!;
-        return UserModel(
+        final userModel = UserModel(
           id: uid,
           name: userData['name'] ?? 'Kullanıcı',
           email: userData['email'] ?? '',
           role: userData['role'] ?? 'user',
         );
+        // Locale kaydet
+        await _userRepository.saveUser(userModel);
+        return userModel;
       }
       return null;
     } catch (e) {
@@ -200,6 +208,7 @@ class AuthService {
   Future<void> updateUserData(String uid, Map<String, dynamic> data) async {
     try {
       await _firestore.collection('users').doc(uid).update(data);
+      // Not: HybridUserRepository listener'ı bunu yakalayıp locale yansıtacaktır.
     } catch (e) {
       throw Exception('Kullanıcı bilgileri güncellenirken bir hata oluştu: $e');
     }

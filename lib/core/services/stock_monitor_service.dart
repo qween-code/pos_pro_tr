@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import '../../features/products/data/repositories/product_repository.dart';
+import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../features/products/data/repositories/hybrid_product_repository.dart';
 import '../../features/products/data/models/product_model.dart';
+import '../../core/database/database_instance.dart';
 import 'notification_service.dart';
 
 class StockMonitorService {
@@ -9,7 +12,7 @@ class StockMonitorService {
   factory StockMonitorService() => _instance;
   StockMonitorService._internal();
 
-  final ProductRepository _productRepository = ProductRepository();
+  HybridProductRepository? _productRepository;
   final NotificationService _notificationService = NotificationService();
   Timer? _monitorTimer;
   final Set<String> _notifiedProducts = {}; // Bildirim gönderilen ürünler
@@ -18,6 +21,20 @@ class StockMonitorService {
 
   // Stok izlemeyi başlat
   void startMonitoring() {
+    // Repository'yi başlat
+    if (_productRepository == null) {
+      try {
+        final dbInstance = Get.find<DatabaseInstance>();
+        _productRepository = HybridProductRepository(
+          localDb: dbInstance.database,
+          firestore: FirebaseFirestore.instance,
+        );
+      } catch (e) {
+        debugPrint('❌ StockMonitorService başlatılamadı: $e');
+        return;
+      }
+    }
+
     // İlk kontrol
     _checkLowStockProducts();
 
@@ -31,12 +48,16 @@ class StockMonitorService {
   void stopMonitoring() {
     _monitorTimer?.cancel();
     _monitorTimer = null;
+    _productRepository?.dispose();
+    _productRepository = null;
   }
 
   // Düşük stoklu ürünleri kontrol et
   Future<void> _checkLowStockProducts() async {
+    if (_productRepository == null) return;
+
     try {
-      final lowStockProducts = await _productRepository.getLowStockProducts(stockThreshold);
+      final lowStockProducts = await _productRepository!.getLowStockProducts(stockThreshold);
 
       for (var product in lowStockProducts) {
         // Eğer bu ürün için daha önce bildirim gönderilmediyse
@@ -55,7 +76,7 @@ class StockMonitorService {
       }
 
       // Stoku normale dönen ürünleri listeden çıkar
-      final allProducts = await _productRepository.getProducts();
+      final allProducts = await _productRepository!.getProducts();
       _notifiedProducts.removeWhere((productId) {
         final product = allProducts.firstWhere(
           (p) => p.id.toString() == productId,
@@ -64,7 +85,7 @@ class StockMonitorService {
             name: '',
             price: 0,
             stock: 100,
-          ),
+            category: 'Genel',          ),
         );
         return product.stock > stockThreshold;
       });

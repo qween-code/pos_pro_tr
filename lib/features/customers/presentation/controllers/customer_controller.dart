@@ -1,16 +1,33 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/utils/error_handler.dart';
+import '../../../../core/database/database_instance.dart';
 import '../../data/models/customer_model.dart';
-import '../../data/repositories/customer_repository.dart';
+import '../../data/repositories/hybrid_customer_repository.dart';
 
 class CustomerController extends GetxController {
-  final CustomerRepository _customerRepository = CustomerRepository();
+  late final HybridCustomerRepository _customerRepository;
   final RxList<Customer> customers = <Customer>[].obs;
   final RxBool isLoading = false.obs;
 
   @override
   void onInit() {
     super.onInit();
+    _customerRepository = HybridCustomerRepository(
+      localDb: db,
+      firestore: firestore,
+    );
+  }
+
+  @override
+  void onClose() {
+    _customerRepository.dispose();
+    super.onClose();
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
     fetchCustomers();
   }
 
@@ -20,7 +37,8 @@ class CustomerController extends GetxController {
       final List<Customer> customerList = await _customerRepository.getCustomers();
       customers.assignAll(customerList);
     } catch (e) {
-      ErrorHandler.handleApiError(e, customMessage: 'Müşteriler yüklenemedi');
+      debugPrint('Müşteriler yüklenemedi: $e');
+      customers.clear();
     } finally {
       isLoading.value = false;
     }
@@ -29,7 +47,7 @@ class CustomerController extends GetxController {
   Future<void> addCustomer(Customer customer) async {
     isLoading.value = true;
     try {
-      await _customerRepository.insertCustomer(customer);
+      await _customerRepository.addCustomer(customer);
       await fetchCustomers();
       Get.back();
       ErrorHandler.showSuccessMessage('Müşteri başarıyla eklendi');
@@ -73,6 +91,23 @@ class CustomerController extends GetxController {
     } catch (e) {
       ErrorHandler.handleApiError(e, customMessage: 'Arama yapılamadı');
       return [];
+    }
+  }
+
+  Future<void> updateBalance(String customerId, double amount) async {
+    try {
+      await _customerRepository.updateBalance(customerId, amount);
+      // Listeyi güncellemek yerine sadece ilgili müşteriyi güncellemek daha performanslı olurdu ama şimdilik fetchCustomers yeterli.
+      // Ancak detay ekranında anlık güncelleme için fetchCustomers çağırmak yerine UI tarafında state güncelledik.
+      // Yine de liste ekranına dönüldüğünde güncel olması için fetchCustomers çağırabiliriz veya listedeki öğeyi güncelleyebiliriz.
+      final index = customers.indexWhere((c) => c.id == customerId);
+      if (index != -1) {
+        customers[index] = customers[index].copyWith(
+          balance: customers[index].balance + amount
+        );
+      }
+    } catch (e) {
+      ErrorHandler.handleApiError(e, customMessage: 'Bakiye güncellenemedi');
     }
   }
 }

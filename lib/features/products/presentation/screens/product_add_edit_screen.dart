@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 import '../../data/models/product_model.dart';
 import '../controllers/product_controller.dart';
 import '../../../../core/constants/theme_constants.dart';
@@ -15,6 +17,8 @@ class ProductAddEditScreen extends StatelessWidget {
   final _categoryController = TextEditingController();
   final _barcodeController = TextEditingController();
   final _taxRateController = TextEditingController();
+  final _criticalStockController = TextEditingController();
+  final RxString _selectedImagePath = ''.obs;
 
   ProductAddEditScreen({super.key, this.product}) {
     if (product != null) {
@@ -24,8 +28,11 @@ class ProductAddEditScreen extends StatelessWidget {
       _categoryController.text = product!.category ?? '';
       _barcodeController.text = product!.barcode ?? '';
       _taxRateController.text = (product!.taxRate * 100).toStringAsFixed(0);
+      _criticalStockController.text = product!.criticalStockLevel.toString();
+      _selectedImagePath.value = product!.imageUrl ?? '';
     } else {
       _taxRateController.text = '10'; // Varsayılan KDV oranı %10
+      _criticalStockController.text = '11'; // Varsayılan kritik stok
     }
   }
 
@@ -60,6 +67,44 @@ class ProductAddEditScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Resim Seçme Alanı
+              Center(
+                child: GestureDetector(
+                  onTap: _pickImage,
+                  child: Obx(() {
+                    final path = _selectedImagePath.value;
+                    ImageProvider? imageProvider;
+                    
+                    if (path.isNotEmpty) {
+                      if (File(path).existsSync()) {
+                        imageProvider = FileImage(File(path));
+                      } else if (path.startsWith('http')) {
+                        imageProvider = NetworkImage(path);
+                      }
+                    }
+
+                    return Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.primary.withOpacity(0.5)),
+                        image: imageProvider != null
+                            ? DecorationImage(
+                                image: imageProvider,
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      child: path.isEmpty
+                          ? Icon(Icons.add_a_photo, size: 40, color: AppTheme.textSecondary)
+                          : null,
+                    );
+                  }),
+                ),
+              ),
+              const SizedBox(height: 24),
               _buildSectionTitle('Temel Bilgiler'),
               const SizedBox(height: 16),
               _buildTextField(
@@ -105,10 +150,41 @@ class ProductAddEditScreen extends StatelessWidget {
               const SizedBox(height: 24),
               _buildSectionTitle('Detaylar'),
               const SizedBox(height: 16),
-              _buildTextField(
-                controller: _categoryController,
-                label: 'Kategori',
-                icon: Icons.category_outlined,
+              DropdownButtonFormField<String>(
+                value: _categoryController.text.isNotEmpty && ['Elektronik', 'Giyim', 'Gıda', 'Kırtasiye', 'Kozmetik', 'Ev & Yaşam', 'Diğer'].contains(_categoryController.text) 
+                    ? _categoryController.text 
+                    : null,
+                items: ['Elektronik', 'Giyim', 'Gıda', 'Kırtasiye', 'Kozmetik', 'Ev & Yaşam', 'Diğer']
+                    .map((label) => DropdownMenuItem(
+                          value: label,
+                          child: Text(label),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    _categoryController.text = value;
+                  }
+                },
+                decoration: InputDecoration(
+                  labelText: 'Kategori',
+                  labelStyle: TextStyle(color: AppTheme.textSecondary),
+                  prefixIcon: Icon(Icons.category_outlined, color: AppTheme.primary),
+                  filled: true,
+                  fillColor: AppTheme.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppTheme.primary),
+                  ),
+                ),
+                validator: (value) => value == null ? 'Lütfen kategori seçin' : null,
               ),
               const SizedBox(height: 16),
               _buildTextField(
@@ -125,11 +201,24 @@ class ProductAddEditScreen extends StatelessWidget {
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 validator: (value) {
                   if (value?.isEmpty ?? true) return 'Gerekli';
-                  final val = int.tryParse(value!);
-                  if (val == null || val < 0 || val > 100) return '0-100 arası';
+                  if (int.tryParse(value!) == null) return 'Geçersiz';
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
+              _buildTextField(
+                controller: _criticalStockController,
+                label: 'Kritik Stok Seviyesi',
+                icon: Icons.warning_amber_rounded,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                validator: (value) {
+                  if (value?.isEmpty ?? true) return 'Gerekli';
+                  if (int.tryParse(value!) == null) return 'Geçersiz';
+                  return null;
+                },
+              ),
+
               const SizedBox(height: 32),
               Obx(() {
                 return Container(
@@ -163,9 +252,11 @@ class ProductAddEditScreen extends StatelessWidget {
                                 name: _nameController.text,
                                 price: double.parse(_priceController.text),
                                 stock: int.parse(_stockController.text),
-                                category: _categoryController.text.isEmpty ? null : _categoryController.text,
+                                category: _categoryController.text.isEmpty ? 'Genel' : _categoryController.text,
                                 barcode: _barcodeController.text.isEmpty ? null : _barcodeController.text,
                                 taxRate: double.parse(_taxRateController.text) / 100,
+                                criticalStockLevel: int.parse(_criticalStockController.text),
+                                imageUrl: _selectedImagePath.value.isEmpty ? null : _selectedImagePath.value,
                               );
                               if (product == null) {
                                 _productController.addProduct(newProduct);
@@ -310,5 +401,32 @@ class ProductAddEditScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+  Future<void> _pickImage() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+      
+      if (result != null && result.files.isNotEmpty && result.files.first.path != null) {
+        _selectedImagePath.value = result.files.first.path!;
+        Get.snackbar(
+          'Başarılı',
+          'Resim seçildi',
+          backgroundColor: Colors.green.withOpacity(0.8),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 1),
+        );
+      }
+    } catch (e) {
+      debugPrint('Resim seçme hatası: $e');
+      Get.snackbar(
+        'Hata',
+        'Resim seçilemedi. Lütfen tekrar deneyin.',
+        backgroundColor: Colors.red.withOpacity(0.8),
+        colorText: Colors.white,
+      );
+    }
   }
 }

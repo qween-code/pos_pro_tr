@@ -84,4 +84,9 @@ class CustomerRepository {
       return Customer.fromJson(data);
     }).toList();
   }
+  Future<void> updateBalance(String customerId, double amount) async {
+    await _firestore.collection(_collectionName).doc(customerId).update({
+      'balance': FieldValue.increment(amount),
+    });
+  }
 }

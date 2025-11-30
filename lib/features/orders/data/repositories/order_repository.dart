@@ -7,11 +7,14 @@ class OrderRepository {
   final String _orderItemsCollectionName = 'order_items';
 
   Future<String> insertOrder(pos_order.Order order, List<pos_order.OrderItem> items) async {
+    // Sipariş nesnesine öğeleri ekle (denormalizasyon için)
+    final orderWithItems = order.copyWith(items: items);
+    
     // Sipariş oluşturma
-    final orderDocRef = await _firestore.collection(_orderCollectionName).add(order.toJson());
+    final orderDocRef = await _firestore.collection(_orderCollectionName).add(orderWithItems.toJson());
     final orderId = orderDocRef.id;
 
-    // Sipariş öğelerini oluşturma
+    // Sipariş öğelerini ayrıca oluşturma (geriye dönük uyumluluk ve detaylı sorgular için)
     for (var item in items) {
       await _firestore.collection(_orderItemsCollectionName).add({
         ...item.toJson(),
@@ -22,7 +25,7 @@ class OrderRepository {
     return orderId;
   }
 
-  Future<List<pos_order.Order>> getOrders({int limit = 100}) async {
+  Future<List<pos_order.Order>> getOrders({int limit = 2000}) async {
     final querySnapshot = await _firestore.collection(_orderCollectionName)
       .orderBy('orderDate', descending: true)
       .limit(limit)

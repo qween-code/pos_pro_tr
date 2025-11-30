@@ -1,73 +1,68 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'sync_service.dart';
 
 class ConnectivityService {
   static final ConnectivityService _instance = ConnectivityService._internal();
   factory ConnectivityService() => _instance;
   ConnectivityService._internal();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final Connectivity _connectivity = Connectivity();
   final _connectivityController = StreamController<bool>.broadcast();
   bool _isOnline = true;
-  Timer? _connectivityTimer;
+  StreamSubscription<List<ConnectivityResult>>? _subscription;
 
-  // Connectivity durumu stream'i
   Stream<bool> get connectivityStream => _connectivityController.stream;
-
-  // Mevcut durum
   bool get isOnline => _isOnline;
 
-  // Connectivity kontrolünü başlat
   void startMonitoring() {
-    // İlk kontrol
+    // İlk durumu kontrol et
     _checkConnectivity();
 
-    // Her 10 saniyede bir kontrol et
-    _connectivityTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      _checkConnectivity();
+    // Değişiklikleri dinle
+    _subscription = _connectivity.onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      _updateConnectionStatus(results);
     });
   }
 
-  // Connectivity kontrolünü durdur
   void stopMonitoring() {
-    _connectivityTimer?.cancel();
-    _connectivityTimer = null;
+    _subscription?.cancel();
+    _connectivityController.close();
   }
 
-  // Connectivity durumunu kontrol et
   Future<void> _checkConnectivity() async {
-    try {
-      // Firestore'dan küçük bir sorgu yaparak bağlantıyı test et
-      // products koleksiyonunu kullan (her zaman erişilebilir olmalı)
-      await _firestore.collection('products').limit(1).get(
-        const GetOptions(source: Source.server),
-      );
+    final results = await _connectivity.checkConnectivity();
+    _updateConnectionStatus(results);
+  }
+
+  void _updateConnectionStatus(List<ConnectivityResult> results) {
+    // none içermiyorsa online kabul et
+    bool isConnected = !results.contains(ConnectivityResult.none);
+    
+    if (isConnected != _isOnline) {
+      _isOnline = isConnected;
+      _connectivityController.add(_isOnline);
+      debugPrint('Bağlantı durumu değişti: ${_isOnline ? "Online" : "Offline"}');
       
-      if (!_isOnline) {
-        _isOnline = true;
-        _connectivityController.add(true);
-        debugPrint('İnternet bağlantısı sağlandı');
-      }
-    } catch (e) {
       if (_isOnline) {
-        _isOnline = false;
-        _connectivityController.add(false);
-        debugPrint('İnternet bağlantısı kesildi: $e');
+        // İnternet geldiyse senkronizasyonu başlat
+        final syncService = SyncService();
+        syncService.syncAll();
+        Get.snackbar('Bağlantı', 'İnternet bağlantısı sağlandı. Veriler senkronize ediliyor.',
+          backgroundColor: Colors.green, colorText: Colors.white);
+      } else {
+        Get.snackbar('Bağlantı', 'İnternet bağlantısı kesildi. Çevrimdışı mod aktif.',
+          backgroundColor: Colors.red, colorText: Colors.white);
       }
     }
   }
 
-  // Manuel connectivity kontrolü
   Future<bool> checkConnectivity() async {
     await _checkConnectivity();
     return _isOnline;
-  }
-
-  // Dispose
-  void dispose() {
-    stopMonitoring();
-    _connectivityController.close();
   }
 }
 

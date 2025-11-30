@@ -2,53 +2,63 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class ErrorHandler {
-  // Global hata yakalayıcı
-  static void setupGlobalErrorHandler() {
-    FlutterError.onError = (FlutterErrorDetails details) async {
-      // Firebase Crashlytics entegrasyonu için buraya ekleme yapılabilir
-      
-      // Hata detaylarını logla
-      debugPrint('Flutter Error: ${details.exception}');
-      debugPrint('Stack Trace: ${details.stack}');
-      
-      // GetX context hazırsa snackbar göster
-      if (Get.isRegistered<GetMaterialController>()) {
-        try {
-      Get.snackbar(
-        'Beklenmeyen Hata',
-        'Uygulamada beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-            duration: const Duration(seconds: 3),
-          );
-        } catch (e) {
-          debugPrint('Snackbar gösterilemedi: $e');
-        }
-      }
-    };
-  }
-
-  // Zone hatalarını yakalamak için callback
-  static void handleZoneError(Object error, StackTrace stack) {
-        debugPrint('Zone Error: $error');
-        debugPrint('Stack Trace: $stack');
-
-    // GetX context hazırsa snackbar göster
+  // Post-frame callback ile snackbar göster (build sırasında setState önleme)
+  static void _showSnackbar({
+    required String title,
+    required String message,
+    required Color backgroundColor,
+  }) {
     if (Get.isRegistered<GetMaterialController>()) {
       try {
-        Get.snackbar(
-          'Sistem Hatası',
-          'Uygulamada bir sistem hatası oluştu. Lütfen uygulamayı yeniden başlatın.',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3),
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Get.snackbar(
+            title,
+            message,
+            backgroundColor: backgroundColor,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 3),
+          );
+        });
       } catch (e) {
         debugPrint('Snackbar gösterilemedi: $e');
       }
     }
+  }
+
+  // Global hata yakalayıcı - SADECE LOGLAMA (popup gösterme)
+  static void setupGlobalErrorHandler() {
+    FlutterError.onError = (FlutterErrorDetails details) async {
+      // Hata detaylarını sadece logla, popup gösterme
+      debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      debugPrint('Flutter Error: ${details.exception}');
+      debugPrint('Stack Trace: ${details.stack}');
+      debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      
+      // Kritik hatalar için popup (opsiyonel - yorumda bırakıldı)
+      // if (details.exception.toString().contains('CRITICAL')) {
+      //   _showSnackbar(
+      //     title: 'Kritik Hata',
+      //     message: 'Uygulamada kritik bir hata oluştu.',
+      //     backgroundColor: Colors.red,
+      //   );
+      // }
+    };
+  }
+
+  // Zone hatalarını yakalamak için callback - SADECE LOGLAMA
+  static void handleZoneError(Object error, StackTrace stack) {
+    debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    debugPrint('Zone Error: $error');
+    debugPrint('Stack Trace: $stack');
+    debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    // Sistem hatası popup'ı devre dışı (sadece loglama)
+    // _showSnackbar(
+    //   title: 'Sistem Hatası',
+    //   message: 'Uygulamada bir sistem hatası oluştu.',
+    //   backgroundColor: Colors.red,
+    // );
   }
 
   // API hatalarını işleme
@@ -63,112 +73,57 @@ class ErrorHandler {
       message = error.toString();
     }
 
-    // Firebase Crashlytics entegrasyonu için buraya ekleme yapılabilir
     debugPrint('API Error: $error');
 
-    if (Get.isRegistered<GetMaterialController>()) {
-      try {
-    Get.snackbar(
-      'Hata',
-      message,
+    _showSnackbar(
+      title: 'Hata',
+      message: message,
       backgroundColor: Colors.red,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3),
     );
-      } catch (e) {
-        debugPrint('Snackbar gösterilemedi: $e');
-      }
-    }
   }
 
   // Ağ bağlantısı hatası
   static void handleNetworkError() {
-    if (Get.isRegistered<GetMaterialController>()) {
-      try {
-    Get.snackbar(
-      'Bağlantı Hatası',
-      'İnternet bağlantınızı kontrol edin ve tekrar deneyin.',
+    _showSnackbar(
+      title: 'Bağlantı Hatası',
+      message: 'İnternet bağlantınızı kontrol edin ve tekrar deneyin.',
       backgroundColor: Colors.orange,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3),
     );
-      } catch (e) {
-        debugPrint('Snackbar gösterilemedi: $e');
-      }
-    }
   }
 
   // Yetkilendirme hatası
   static void handleAuthError() {
-    if (Get.isRegistered<GetMaterialController>()) {
-      try {
-    Get.snackbar(
-      'Yetkilendirme Hatası',
-      'Bu işlemi gerçekleştirmek için yetkiniz bulunmamaktadır.',
+    _showSnackbar(
+      title: 'Yetkilendirme Hatası',
+      message: 'Bu işlemi gerçekleştirmek için yetkiniz bulunmamaktadır.',
       backgroundColor: Colors.red,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3),
     );
-      } catch (e) {
-        debugPrint('Snackbar gösterilemedi: $e');
-      }
-    }
   }
 
   // Form validasyon hatası
   static void handleValidationError(String message) {
-    if (Get.isRegistered<GetMaterialController>()) {
-      try {
-    Get.snackbar(
-      'Geçersiz Bilgi',
-      message,
+    _showSnackbar(
+      title: 'Geçersiz Bilgi',
+      message: message,
       backgroundColor: Colors.orange,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3),
     );
-      } catch (e) {
-        debugPrint('Snackbar gösterilemedi: $e');
-      }
-    }
   }
 
   // Bilgi mesajı göster
   static void showInfoMessage(String message) {
-    if (Get.isRegistered<GetMaterialController>()) {
-      try {
-    Get.snackbar(
-      'Bilgi',
-      message,
+    _showSnackbar(
+      title: 'Bilgi',
+      message: message,
       backgroundColor: Colors.blue,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3),
     );
-      } catch (e) {
-        debugPrint('Snackbar gösterilemedi: $e');
-      }
-    }
   }
 
   // Başarı mesajı göster
   static void showSuccessMessage(String message) {
-    if (Get.isRegistered<GetMaterialController>()) {
-      try {
-    Get.snackbar(
-      'Başarılı',
-      message,
+    _showSnackbar(
+      title: 'Başarılı',
+      message: message,
       backgroundColor: Colors.green,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 3),
     );
-      } catch (e) {
-        debugPrint('Snackbar gösterilemedi: $e');
-      }
-    }
   }
 }

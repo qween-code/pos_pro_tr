@@ -19,5 +19,5 @@ class AppConstants {
 
   // Veritabanı adı
   static const String databaseName = 'pos_pro_tr.db';
-  static const int databaseVersion = 2;
+  static const int databaseVersion = 3;
 }

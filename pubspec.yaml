@@ -23,15 +23,33 @@ dependencies:
   mobile_scanner: ^5.2.3
   firebase_messaging: ^15.1.3
   flutter_local_notifications: ^17.2.2
-  google_sign_in: ^7.2.0
+  google_sign_in: ^6.2.1
   http: ^1.6.0
   crypto: ^3.0.7
   xml: ^6.6.1
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  shared_preferences: ^2.5.3
+  connectivity_plus: ^7.0.0
+  path_provider: ^2.1.5
+  share_plus: ^12.0.1
+  file_picker: ^10.3.7
+  csv: ^6.0.0
+  excel: ^4.0.6
+  uuid: ^4.5.2
+  # Drift - SQLite ORM for hybrid system
+  drift: ^2.18.0
+  drift_flutter: ^0.1.0
+  sqlite3_flutter_libs: ^0.5.24
+  workmanager: ^0.9.0  # Background task execution - updated to latest
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  # Drift code generation
+  drift_dev: ^2.18.0
+  build_runner: ^2.4.11
 
 flutter:
   uses-material-design: true

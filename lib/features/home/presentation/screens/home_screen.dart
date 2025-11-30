@@ -1,107 +1,120 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/theme_constants.dart';
-import '../../../../core/utils/data_seeder.dart';
+import '../../../register/presentation/controllers/register_controller.dart';
+import '../../../register/presentation/screens/open_register_screen.dart';
+import '../../../register/presentation/screens/close_register_screen.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 
-class HomeScreen extends StatelessWidget {
-  HomeScreen({super.key});
+/// Ana kontrol paneli - Dashboard
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
+  double todaySales = 0.0;
+  int todayOrders = 0;
+  int lowStockCount = 0;
+  int totalCustomers = 0;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboardData();
+  }
+
+  Future<void> _loadDashboardData() async {
+    setState(() => isLoading = true);
+    
+    try {
+      final now = DateTime.now();
+      final startOfDay = DateTime(now.year, now.month, now.day);
+
+      // Günlük satış ve sipariş sayısı
+      final ordersSnapshot = await _firestore
+          .collection('orders')
+          .where('orderDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .get();
+
+      double sales = 0.0;
+      int completedOrders = 0;
+      
+      for (var doc in ordersSnapshot.docs) {
+        final data = doc.data();
+        // Sadece tamamlanmış siparişleri say
+        if (data['status'] == 'completed') {
+          sales += (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
+          completedOrders++;
+        }
+      }
+
+      // Düşük stok
+      final productsSnapshot = await _firestore
+          .collection('products')
+          .where('stock', isLessThan: 10)
+          .get();
+
+      // Müşteri sayısı
+      final customersSnapshot = await _firestore.collection('customers').get();
+
+      setState(() {
+        todaySales = sales;
+        todayOrders = completedOrders;
+        lowStockCount = productsSnapshot.docs.length;
+        totalCustomers = customersSnapshot.docs.length;
+        isLoading = false;
+      });
+
+      debugPrint('📊 Dashboard yüklendi: ₺${sales.toStringAsFixed(2)}, $todayOrders sipariş');
+    } catch (e) {
+      debugPrint('❌ Dashboard yükleme hatası: $e');
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final registerController = Get.put(RegisterController());
+    final authController = Get.find<AuthController>();
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 20),
-            _buildDashboardSummary(),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Hızlı İşlemler',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppTheme.textPrimary,
-                          letterSpacing: 1.2,
-                        ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.cloud_upload, color: AppTheme.secondary),
-                    onPressed: _seedData,
-                    tooltip: 'Örnek Verileri Yükle',
-                  ),
-                ],
-              ),
+        child: RefreshIndicator(
+          onRefresh: _loadDashboardData,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                _buildHeader(authController),
+                const SizedBox(height: 24),
+                _buildRegisterStatus(registerController),
+                const SizedBox(height: 24),
+                _buildStats(),
+                const SizedBox(height: 24),
+                _buildQuickActions(authController),
+                const SizedBox(height: 24),
+                _buildMenuGrid(authController),
+                const SizedBox(height: 24),
+              ],
             ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: _buildMenuGrid(context),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Future<void> _seedData() async {
-    Get.dialog(
-      AlertDialog(
-        backgroundColor: AppTheme.surface,
-        title: const Text('Veri Yükleme', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'Örnek ürünler ve müşteriler yüklenecek. Onaylıyor musunuz?',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('İPTAL'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Get.back();
-              Get.snackbar(
-                'Yükleniyor',
-                'Örnek veriler ekleniyor...',
-                backgroundColor: AppTheme.surface,
-                colorText: Colors.white,
-              );
-
-              try {
-                await DataSeeder().seedAll();
-                Get.snackbar(
-                  'Başarılı',
-                  'Veriler başarıyla eklendi!',
-                  backgroundColor: Colors.green,
-                  colorText: Colors.white,
-                );
-              } catch (e) {
-                Get.snackbar(
-                  'Hata',
-                  'Veri yükleme başarısız: $e',
-                  backgroundColor: Colors.red,
-                  colorText: Colors.white,
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-            ),
-            child: const Text('YÜKLE'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
+  Widget _buildHeader(AuthController authController) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
         gradient: AppTheme.cardGradient,
         borderRadius: BorderRadius.only(
@@ -109,145 +122,200 @@ class HomeScreen extends StatelessWidget {
           bottomRight: Radius.circular(30),
         ),
       ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Hoş Geldiniz,',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                    ),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    'Admin',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.logout, color: Colors.white),
-                  onPressed: () {
-                    Get.offAllNamed('/login');
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDashboardSummary() {
-    return SizedBox(
-      height: 140,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        children: [
-          _buildSummaryCard(
-            title: 'Günlük Satış',
-            value: '₺12,450',
-            icon: Icons.attach_money,
-            color: Colors.greenAccent,
-          ),
-          const SizedBox(width: 15),
-          _buildSummaryCard(
-            title: 'Siparişler',
-            value: '24',
-            icon: Icons.shopping_bag_outlined,
-            color: Colors.orangeAccent,
-          ),
-          const SizedBox(width: 15),
-          _buildSummaryCard(
-            title: 'Yeni Müşteri',
-            value: '5',
-            icon: Icons.person_add_outlined,
-            color: Colors.blueAccent,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      width: 160,
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white10),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(icon, color: color, size: 28),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '+2.5%',
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Text(
+                'Hoş Geldiniz',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 4),
               Text(
-                value,
+                authController.currentUser.value?.name ?? 'Kullanıcı',
                 style: const TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: Colors.white,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              const SizedBox(height: 4),
               Text(
-                title,
-                style: const TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 14,
+                DateFormat('dd MMMM yyyy, EEEE', 'tr_TR').format(DateTime.now()),
+                style: const TextStyle(color: Colors.white60, fontSize: 12),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.refresh, color: Colors.white),
+                onPressed: _loadDashboardData,
+                tooltip: 'Yenile',
+              ),
+              IconButton(
+                icon: const Icon(Icons.logout, color: Colors.white),
+                onPressed: () {
+                  Get.defaultDialog(
+                    title: 'Çıkış Yap',
+                    middleText: 'Çıkış yapmak istediğinizden emin misiniz?',
+                    textConfirm: 'Evet',
+                    textCancel: 'Hayır',
+                    confirmTextColor: Colors.white,
+                    onConfirm: () {
+                      Get.back();
+                      Get.offAllNamed('/login');
+                    },
+                  );
+                },
+                tooltip: 'Çıkış Yap',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRegisterStatus(RegisterController controller) {
+    return Obx(() {
+      final isOpen = controller.currentRegister.value != null;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: InkWell(
+          onTap: () {
+            if (isOpen) {
+              Get.to(() => CloseRegisterScreen());
+            } else {
+              Get.to(() => OpenRegisterScreen());
+            }
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isOpen ? Colors.green : Colors.red,
+                width: 2,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: (isOpen ? Colors.green : Colors.red).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    isOpen ? Icons.lock_open : Icons.lock,
+                    color: isOpen ? Colors.green : Colors.red,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isOpen ? 'KASA AÇIK' : 'KASA KAPALI',
+                        style: TextStyle(
+                          color: isOpen ? Colors.green : Colors.red,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isOpen ? 'İşlemlere devam edebilirsiniz' : 'Kasayı açmak için dokunun',
+                        style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white54,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildStats() {
+    if (isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(40),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Bugünün Özeti',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  'Satış',
+                  '₺${todaySales.toStringAsFixed(2)}',
+                  Icons.attach_money,
+                  Colors.green,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  'Sipariş',
+                  todayOrders.toString(),
+                  Icons.shopping_bag,
+                  Colors.blue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  'Düşük Stok',
+                  lowStockCount.toString(),
+                  Icons.warning,
+                  Colors.orange,
+                  onTap: () => Get.toNamed('/products', arguments: {'filter': 'low_stock'}),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  'Müşteri',
+                  totalCustomers.toString(),
+                  Icons.people,
+                  Colors.purple,
+                  onTap: () => Get.toNamed('/customers'),
                 ),
               ),
             ],
@@ -257,95 +325,263 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuGrid(BuildContext context) {
-    final menuItems = [
-      {'icon': Icons.point_of_sale, 'title': 'Satış Yap', 'route': '/orders/create', 'color': AppTheme.primary},
-      {'icon': Icons.inventory_2_outlined, 'title': 'Ürünler', 'route': '/products', 'color': Colors.blueAccent},
-      {'icon': Icons.people_alt_outlined, 'title': 'Müşteriler', 'route': '/customers', 'color': Colors.purpleAccent},
-      {'icon': Icons.receipt_long_outlined, 'title': 'Siparişler', 'route': '/orders', 'color': Colors.orange},
-      {'icon': Icons.payments_outlined, 'title': 'Ödemeler', 'route': '/payments', 'color': Colors.greenAccent},
-      {'icon': Icons.analytics_outlined, 'title': 'Raporlar', 'route': '/reports', 'color': Colors.redAccent},
-    ];
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(20),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.1,
-      ),
-      itemCount: menuItems.length,
-      itemBuilder: (context, index) {
-        final item = menuItems[index];
-        return _buildMenuCard(
-          icon: item['icon'] as IconData,
-          title: item['title'] as String,
-          onTap: () => Get.toNamed(item['route'] as String),
-          color: item['color'] as Color,
-        );
-      },
-    );
-  }
-
-  Widget _buildMenuCard({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    required Color color,
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color, {
+    VoidCallback? onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppTheme.surface.withOpacity(0.5)),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 10,
-                offset: Offset(0, 5),
-              ),
-            ],
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppTheme.surface,
-                AppTheme.surface.withOpacity(0.8),
-              ],
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  size: 32,
-                  color: color,
-                ),
-              ),
-              const SizedBox(height: 16),
+              Icon(icon, color: color, size: 24),
               Text(
                 title,
                 style: const TextStyle(
-                  color: AppTheme.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  color: Colors.white70,
+                  fontSize: 12,
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActions(AuthController authController) {
+    final isAdmin = authController.isAdmin;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Hızlı Erişim',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildQuickActionButton(
+                  'Yeni Satış',
+                  Icons.point_of_sale,
+                  AppTheme.primary,
+                  () => Get.toNamed('/orders/create'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              if (isAdmin)
+                Expanded(
+                  child: _buildQuickActionButton(
+                    'Raporlar',
+                    Icons.analytics,
+                    Colors.purple,
+                    () => Get.toNamed('/reports'),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionButton(
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.5)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuGrid(AuthController authController) {
+    final isAdmin = authController.isAdmin;
+
+    final menuItems = [
+      {
+        'icon': Icons.inventory_2,
+        'title': 'Ürünler',
+        'route': '/products',
+        'color': Colors.blue,
+        'admin': false
+      },
+      {
+        'icon': Icons.people,
+        'title': 'Müşteriler',
+        'route': '/customers',
+        'color': Colors.purple,
+        'admin': false
+      },
+      {
+        'icon': Icons.receipt_long,
+        'title': 'Siparişler',
+        'route': '/orders',
+        'color': Colors.orange,
+        'admin': false
+      },
+      {
+        'icon': Icons.payments,
+        'title': 'Ödemeler',
+        'route': '/payments',
+        'color': Colors.green,
+        'admin': true
+      },
+      {
+        'icon': Icons.people_outline,
+        'title': 'Çalışan Performansı',
+        'route': '/reports/cashier',
+        'color': Colors.teal,
+        'admin': true
+      },
+      {
+        'icon': Icons.settings,
+        'title': 'Ayarlar',
+        'route': '/settings',
+        'color': Colors.blueGrey,
+        'admin': true
+      },
+    ];
+
+    final filteredItems = menuItems.where((item) {
+      if (isAdmin) return true;
+      return !(item['admin'] as bool);
+    }).toList();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Menü',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.3,
+            ),
+            itemCount: filteredItems.length,
+            itemBuilder: (context, index) {
+              final item = filteredItems[index];
+              return _buildMenuItem(
+                item['title'] as String,
+                item['icon'] as IconData,
+                item['color'] as Color,
+                () => Get.toNamed(item['route'] as String),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuItem(
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );

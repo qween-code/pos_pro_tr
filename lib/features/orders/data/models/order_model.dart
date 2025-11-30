@@ -1,13 +1,17 @@
 class Order {
-  final String? id;  // Firestore için String ID
+  final String? id;
   final String? customerId;
   final DateTime orderDate;
   final double totalAmount;
   final double taxAmount;
   final double discountAmount;
-  final String? paymentMethod;
+  final String? paymentMethod; // Ana ödeme yöntemi (uyumluluk için)
   final String status;
   final String? customerName;
+  final List<PaymentDetail> payments;
+  final String? cashierName;
+  final String? branchId;
+  final List<OrderItem> items; // Denormalized items
 
   Order({
     this.id,
@@ -19,6 +23,10 @@ class Order {
     this.paymentMethod,
     this.status = 'pending',
     this.customerName,
+    this.payments = const [],
+    this.cashierName,
+    this.branchId,
+    this.items = const [],
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -34,6 +42,16 @@ class Order {
       paymentMethod: json['paymentMethod'],
       status: json['status'] ?? 'pending',
       customerName: json['customerName'],
+      payments: (json['payments'] as List<dynamic>?)
+              ?.map((e) => PaymentDetail.fromJson(e))
+              .toList() ??
+          [],
+      cashierName: json['cashierName'],
+      branchId: json['branchId'],
+      items: (json['items'] as List<dynamic>?)
+              ?.map((e) => OrderItem.fromJson(e))
+              .toList() ??
+          [],
     );
   }
 
@@ -48,21 +66,46 @@ class Order {
       'paymentMethod': paymentMethod,
       'status': status,
       'customerName': customerName,
+      'payments': payments.map((e) => e.toJson()).toList(),
+      'cashierName': cashierName,
+      'branchId': branchId,
+      'items': items.map((e) => e.toJson()).toList(),
     };
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      if (id != null) 'id': id,
-      'customerId': customerId,
-      'orderDate': orderDate.toIso8601String(),
-      'totalAmount': totalAmount,
-      'taxAmount': taxAmount,
-      'discountAmount': discountAmount,
-      'paymentMethod': paymentMethod,
-      'status': status,
-      'customerName': customerName,
-    };
+    return toJson();
+  }
+  Order copyWith({
+    String? id,
+    String? customerId,
+    DateTime? orderDate,
+    double? totalAmount,
+    double? taxAmount,
+    double? discountAmount,
+    String? paymentMethod,
+    String? status,
+    String? customerName,
+    List<PaymentDetail>? payments,
+    String? cashierName,
+    String? branchId,
+    List<OrderItem>? items,
+  }) {
+    return Order(
+      id: id ?? this.id,
+      customerId: customerId ?? this.customerId,
+      orderDate: orderDate ?? this.orderDate,
+      totalAmount: totalAmount ?? this.totalAmount,
+      taxAmount: taxAmount ?? this.taxAmount,
+      discountAmount: discountAmount ?? this.discountAmount,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      status: status ?? this.status,
+      customerName: customerName ?? this.customerName,
+      payments: payments ?? this.payments,
+      cashierName: cashierName ?? this.cashierName,
+      branchId: branchId ?? this.branchId,
+      items: items ?? this.items,
+    );
   }
 }
 
@@ -74,6 +117,7 @@ class OrderItem {
   final double unitPrice;
   final double taxRate;
   final String? productName;
+  final int refundedQuantity; // İade edilen miktar
 
   OrderItem({
     this.id,
@@ -83,6 +127,7 @@ class OrderItem {
     required this.unitPrice,
     required this.taxRate,
     this.productName,
+    this.refundedQuantity = 0,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -94,6 +139,7 @@ class OrderItem {
       unitPrice: (json['unitPrice'] ?? 0).toDouble(),
       taxRate: (json['taxRate'] ?? 0).toDouble(),
       productName: json['productName'],
+      refundedQuantity: json['refundedQuantity'] ?? 0,
     );
   }
 
@@ -106,10 +152,32 @@ class OrderItem {
       'unitPrice': unitPrice,
       'taxRate': taxRate,
       'productName': productName,
+      'refundedQuantity': refundedQuantity,
     };
   }
 
   double get totalPrice => unitPrice * quantity;
   double get totalTax => totalPrice * taxRate;
   double get total => totalPrice + totalTax;
+}
+
+class PaymentDetail {
+  final String method; // 'cash', 'card', 'other'
+  final double amount;
+
+  PaymentDetail({required this.method, required this.amount});
+
+  factory PaymentDetail.fromJson(Map<String, dynamic> json) {
+    return PaymentDetail(
+      method: json['method'] ?? 'cash',
+      amount: (json['amount'] ?? 0).toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'method': method,
+      'amount': amount,
+    };
+  }
 }

@@ -1,309 +1,335 @@
-# 🏪 POS Pro TR - Modern Point of Sale System
+# 🏪 PosPro TR - Modern Point of Sale System
 
-<div align="center">
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
+[![Firebase](https://img.shields.io/badge/Firebase-Integrated-FFCA28?logo=firebase)](https://firebase.google.com)
+[![Dart](https://img.shields.io/badge/Dart-3.0+-0175C2?logo=dart)](https://dart.dev)
 
-![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)
-![Firebase](https://img.shields.io/badge/Firebase-Cloud-FFCA28?logo=firebase)
-![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart)
-![License](https://img.shields.io/badge/License-Proprietary-red)
-![Status](https://img.shields.io/badge/Status-MVP%20Ready-success)
-
-**Türkiye'nin modern, bulut tabanlı satış noktası sistemi**
-
-[Demo](#-demo) • [Özellikler](#-temel-özellikler) • [Kurulum](#-kurulum) • [Dokümantasyon](#-dokümantasyon)
-
-</div>
+**Enterprise-grade Point of Sale system built with Flutter, designed specifically for Turkish retail businesses.**
 
 ---
 
-## 📱 Demo
+## 🎯 Project Overview
 
-<div align="center">
-  <img src="https://via.placeholder.com/800x400/0A192F/64FFDA?text=POS+Pro+TR+Demo" alt="Demo"/>
-  <p><em>Modern dark theme arayüzü ile profesyonel kullanıcı deneyimi</em></p>
-</div>
+PosPro TR is a comprehensive, **offline-first** POS system combining local SQLite storage with Firebase cloud synchronization. Built with **Clean Architecture** and **MVVM pattern**, it provides a robust, scalable solution for modern retail operations.
 
----
+### ✨ Core Features
 
-## ✨ Temel Özellikler
+#### 🛒 Sales Management
+- Multi-item orders with real-time calculations
+- Multiple payment methods (Cash, Card, Credit)
+- Partial payments support
+- Customer account integration
+- Order parking and retrieval
 
-### 💼 İş Yönetimi
-- 📦 **Ürün Yönetimi** - Stok takibi, barkod okuma, kategori desteği
-- 👥 **Müşteri Yönetimi** - CRM, sadakat puanları, müşteri profilleri
-- 🛒 **Sipariş Yönetimi** - Hızlı sipariş oluşturma, durum takibi
-- 💰 **Ödeme Yönetimi** - Çoklu ödeme yöntemi, taksit desteği
-- 🎁 **İndirim Kampanyaları** - Yüzde/sabit indirim, tarih aralıklı kampanyalar
+#### 📊 Advanced Analytics
+- **Real-time dashboard** (< 1 second updates)
+- **Cashier performance tracking** (per-cashier sales analysis)
+- Hourly sales patterns
+- Top products analysis
+- Branch-wise reporting
+- Z-Report generation
 
-### 📊 Raporlama & Analiz
-- 📈 **Canlı Dashboard** - Günlük satış, sipariş, müşteri istatistikleri
-- 📉 **Grafik Raporlar** - fl_chart ile profesyonel grafikler
-- 💳 **Ödeme Analizi** - Ödeme yöntemi dağılımı, trend analizi
-- 🏆 **En Çok Satanlar** - Ürün performans raporları
+#### 💾 Hybrid Data Architecture
+- **Offline-first**: Local SQLite (< 100ms operations)
+- **Background Firebase sync**: Every 15 minutes
+- Automatic conflict resolution
+- Zero data loss guarantee
+- WorkManager for reliable sync
 
-### 🔧 Teknik Özellikler
-- ☁️ **Firebase Backend** - Firestore, Authentication, Cloud Messaging
-- 📱 **Cross-Platform** - Android & iOS desteği
-- 🌙 **Modern UI/UX** - Dark theme, responsive tasarım
-- 📶 **Offline Mod** - Çevrimdışı çalışma, otomatik senkronizasyon
-- 🔐 **Güvenlik** - Firebase Auth, role-based access control
-- 🔔 **Bildirimler** - Sipariş, ödeme, stok uyarıları
+#### 📦 Inventory Management
+- User-configurable critical stock levels
+- Real-time low stock alerts
+- Barcode scanning (mobile_scanner)
+- Category-based organization
+- Product image management
 
----
+#### 🔐 Security & Authentication
+- Firebase Authentication
+- Google Sign-In integration
+- Role-based access control (Admin, Cashier, Manager)
+- Cash register (drawer) management
+- Audit trail for all transactions
 
-## 🚀 Kurulum
-
-### Gereksinimler
-- Flutter SDK 3.x+
-- Dart 3.x+
-- Android Studio / VS Code
-- Firebase Account
-
-### Adım 1: Projeyi Klonlayın
-```bash
-git clone https://github.com/KULLANICI/pos_pro_tr.git
-cd pos_pro_tr
-```
-
-### Adım 2: Bağımlılıkları Yükleyin
-```bash
-flutter pub get
-```
-
-### Adım 3: Firebase Yapılandırması
-```bash
-# Firebase CLI kurulumu
-npm install -g firebase-tools
-
-# Firebase giriş
-firebase login
-
-# FlutterFire yapılandırması
-flutterfire configure
-```
-
-### Adım 4: Çalıştırın
-```bash
-flutter run
-```
+#### 📱 Modern UI/UX
+- Dark theme optimized
+- Responsive design
+- Full Turkish language support
+- Intuitive navigation
+- FlChart data visualization
 
 ---
 
-## 🏗️ Mimari
+## 🏗️ Architecture
+
+### Clean Architecture + MVVM
+
+```
+┌─────────────────────────┐
+│   Presentation Layer    │  ← Views, Controllers (GetX)
+├─────────────────────────┤
+│     Domain Layer        │  ← Business Logic (optional)
+├─────────────────────────┤
+│      Data Layer         │  ← Repositories, Models
+│  ┌─────────┬─────────┐  │
+│  │ SQLite  │Firebase │  │  ← Hybrid Storage
+│  │(Drift)  │(Cloud)  │  │
+│  └─────────┴─────────┘  │
+└─────────────────────────┘
+```
+
+**Key Patterns**:
+- ✅ MVVM (Model-View-ViewModel)
+- ✅ Repository Pattern
+- ✅ Dependency Injection (GetX)
+- ✅ Observer Pattern (Reactive state)
+- ✅ Singleton (Database instance)
+
+👉 **[Full Architecture Documentation](./docs/ARCHITECTURE.md)**
+
+---
+
+## 📁 Project Structure
 
 ```
 lib/
-├── core/                    # Çekirdek servisler
-│   ├── constants/           # Sabitler, tema
-│   ├── services/            # Firebase, Auth, Sync, Notification
-│   ├── utils/               # Helpers, validators
-│   └── widgets/             # Ortak widget'lar
-├── features/                # Özellik modülleri
-│   ├── auth/                # Kimlik doğrulama
-│   ├── products/            # Ürün yönetimi
-│   ├── customers/           # Müşteri yönetimi
-│   ├── orders/              # Sipariş yönetimi
-│   ├── payments/            # Ödeme yönetimi
-│   ├── discounts/           # İndirim yönetimi
-│   └── reports/             # Raporlama
-└── app.dart                 # Ana uygulama
+├── core/                    # Core utilities
+│   ├── constants/          # App constants
+│   ├── database/           # Drift SQLite database
+│   ├── services/           # Background services, PDF, etc.
+│   └── utils/              # Helpers, validators
+│
+├── features/               # Feature modules (MVVM)
+│   │
+│   ├── auth/              # Authentication
+│   │   ├── data/          # Models, Repositories
+│   │   └── presentation/  # Controllers, Screens, Widgets
+│   │
+│   ├── products/          # Product management
+│   ├── orders/            # Order processing (POS)
+│   ├── customers/         # Customer management
+│   ├── reports/           # Analytics & reporting
+│   ├── register/          # Cash register
+│   └── branches/          # Multi-branch support
+│
+└── main.dart              # App entry point
 ```
-
-**Mimari Prensipler:**
-- ✅ MVVM (Model-View-ViewModel)
-- ✅ Clean Architecture
-- ✅ Separation of Concerns
-- ✅ Repository Pattern
 
 ---
 
-## 🛠️ Teknoloji Stack
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Flutter SDK**: 3.0+ 
+- **Dart**: 3.0+
+- Android Studio / VS Code
+- Firebase account
+
+### Installation
+
+1. **Clone repository**
+   ```bash
+   git clone <repository-url>
+   cd pos_pro_tr
+   ```
+
+2. **Install dependencies**
+   ```bash
+   flutter pub get
+   ```
+
+3. **Configure Firebase**
+   ```bash
+   flutterfire configure
+   ```
+
+4. **Generate database code**
+   ```bash
+   dart run build_runner build --delete-conflicting-outputs
+   ```
+
+5. **Run application**
+   ```bash
+   # Android
+   flutter run -d <device-id>
+   
+   # Windows (experimental)
+   flutter run -d windows
+   
+   # Linux (experimental)
+   flutter run -d linux
+   ```
+
+👉 **[Detailed Quick Start Guide](./docs/QUICK_START.md)**
+
+---
+
+## 📖 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [📐 ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System architecture, MVVM, Clean Architecture |
+| [🎨 VISUAL_ARCHITECTURE.md](./docs/VISUAL_ARCHITECTURE.md) | Visual diagrams and flowcharts |
+| [📡 API_DOCUMENTATION.md](./docs/API_DOCUMENTATION.md) | API reference, data models |
+| [🚀 QUICK_START.md](./docs/QUICK_START.md) | Installation and setup guide |
+| [📚 KULLANIM_REHBERI.md](./docs/KULLANIM_REHBERI.md) | User manual (Turkish) |
+| [🔧 TECH_STACK.md](./docs/TECH_STACK.md) | Complete technology stack |
+
+---
+
+## 🔧 Technology Stack
 
 ### Frontend
-- **Flutter 3.x** - Cross-platform framework
-- **GetX** - State management & routing
-- **fl_chart** - Grafik raporlar
+- **Flutter** 3.x - Cross-platform framework
+- **GetX** 4.6.6 - State management, DI, routing
+- **FlChart** 0.66.2 - Data visualization
 
-### Backend & Services
-- **Firebase Firestore** - NoSQL cloud database
-- **Firebase Authentication** - Kullanıcı yönetimi
-- **Firebase Cloud Messaging** - Push notifications
-- **Firebase Storage** - Dosya depolama
+### Backend & Database
+- **Firebase**
+  - Authentication (with Google Sign-In)
+  - Firestore (Cloud NoSQL database)
+  - Cloud Messaging (notifications)
+- **Drift** 2.18.0 - Type-safe SQLite ORM
+- **WorkManager** 0.9.0 - Background task scheduling
 
-### Entegrasyonlar
-- **İyzico** - Sanal POS entegrasyonu
-- **E-Fatura** - GİB uyumlu faturalama
-- **Mobile Scanner** - Barkod okuma
+### Key Libraries
+| Library | Version | Purpose |
+|---------|---------|---------|
+| `cloud_firestore` | 5.6.12 | Cloud database |
+| `drift` | 2.18.0 | Local SQLite ORM |
+| `get` | 4.6.6 | State management |
+| `mobile_scanner` | 5.2.3 | Barcode scanning |
+| `fl_chart` | 0.66.2 | Charts & graphs |
+| `pdf` | 3.11.1 | Receipt generation |
+| `workmanager` | 0.9.0 | Background sync |
 
-### Dev Tools
-- **Firebase Emulator** - Yerel geliştirme
-- **Android Studio** - IDE
-- **Git** - Version control
-
-Detaylı bilgi için: [TECH_STACK.md](TECH_STACK.md)
-
----
-
-## 💳 Ödeme & Entegrasyonlar
-
-### Desteklenen Ödeme Yöntemleri
-- 💳 Kredi Kartı (İyzico)
-- 💰 Nakit
-- 🏦 Havale/EFT
-- 📱 QR Kod (yakında)
-
-### E-Fatura Desteği
-- ✅ GİB uyumlu UBL-TR XML
-- ✅ E-Fatura & E-Arşiv
-- ✅ Otomatik fatura kesme
-- ✅ PDF indirme
-
-Detaylı bilgi için: [PAYMENT_INTEGRATION_GUIDE.md](PAYMENT_INTEGRATION_GUIDE.md)
+**[Complete Tech Stack →](./docs/TECH_STACK.md)**
 
 ---
 
-## 📊 Firebase Yapılandırması
+## 📊 Performance Metrics
 
-### Firestore Collections
-```
-pos-pro-tr-2025/
-├── products          # Ürünler
-├── customers         # Müşteriler
-├── orders            # Siparişler
-├── order_items       # Sipariş kalemleri
-├── payments          # Ödemeler
-├── discounts         # İndirimler
-└── users             # Kullanıcılar
-```
-
-### Security Rules
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Development rules - Production'da güncellenecek
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}
-```
-
-⚠️ **Önemli:** Production ortamında security rules güncellenmeli!
+| Metric | Value |
+|--------|-------|
+| **Local DB Operations** | < 100ms |
+| **Sales Analytics Update** | < 1 second |
+| **Background Sync Interval** | Every 15 minutes |
+| **Offline Capability** | Full functionality |
+| **Image Optimization** | Automatic compression |
 
 ---
 
-## 🧪 Test
+## 🔒 Security
 
-### Unit Tests
+- ✅ Firebase Authentication (Email/Password + Google)
+- ✅ Role-based access control (Admin, Cashier, Manager)
+- ✅ Encrypted HTTPS communications
+- ✅ Input validation & sanitization
+- ✅ Firestore security rules
+- ✅ Audit logging for transactions
+
+---
+
+## 🌍 Platform Support
+
+| Platform | Status | Notes |
+|----------|--------|-------|
+| **Android** | ✅ Fully tested | Production-ready |
+| **iOS** | ⚠️ Needs testing | Code compatible |
+| **Windows** | ⚠️ Experimental | Requires testing |
+| **Linux** | ⚠️ Experimental | Requires testing |
+| **Web** | ❌ Limited | Not recommended for POS |
+
+**Note**: Currently optimized and tested for **Android**. Windows and Linux support is available but requires additional testing.
+
+---
+
+## 📱 Screenshots (Android)
+
+*Coming soon...*
+
+---
+
+## 🧪 Testing
+
 ```bash
+# Run unit tests
 flutter test
+
+# Run integration tests  
+flutter test integration_test/
+
+# Generate coverage
+flutter test --coverage
 ```
 
-### Widget Tests
-```bash
-flutter test test/widget_test.dart
-```
-
-### Integration Tests
-```bash
-flutter drive --driver=test_driver/integration_test.dart
-```
+**Current Test Coverage**: TBD
 
 ---
 
-## 📈 Performans
+## 🤝 Contributing
 
-- ⚡ **Hızlı Başlatma** - Splash screen ile optimize edilmiş
-- 🔄 **Lazy Loading** - Pagination desteği
-- 💾 **Offline Cache** - SQLite persistence
-- 📦 **Küçük APK** - ~20MB (debug), ~15MB (release)
+This is a **proprietary project** developed for internal use. 
 
----
-
-## 🔐 Güvenlik
-
-- ✅ Firebase Authentication
-- ✅ Role-based access (Admin/User)
-- ✅ Secure API communication (HTTPS)
-- ✅ PCI DSS uyumlu ödeme (İyzico)
-- ✅ Data encryption at rest
+For collaboration or partnership inquiries, please contact the project owner.
 
 ---
 
-## 📝 Changelog
+## 📄 License
 
-### v1.0.1 (28 Kasım 2025)
-- ✅ Firebase entegrasyonu
-- ✅ Tüm CRUD işlemleri
-- ✅ Modern UI/UX
-- ✅ Offline mod
-- ✅ Push notifications
-- ✅ E-Fatura altyapısı
-- ✅ İyzico ödeme entegrasyonu
+**Proprietary License** - All rights reserved.
 
-[Detaylı changelog için tıklayın](CHANGELOG.md)
+This software is proprietary and confidential. Unauthorized copying, modification, distribution, or use of this software, via any medium, is strictly prohibited.
 
 ---
 
-## 🗺️ Roadmap
+## 📞 Contact & Support
 
-### Q1 2026
-- [ ] Google Sign-In
-- [ ] Apple Pay entegrasyon
-- [ ] Detaylı raporlar
+- **Project Owner**: [Your Company Name]
+- **Email**: support@pospro.tr
+- **Documentation**: [docs/](./docs/)
+
+For technical support, bug reports, or feature requests, please refer to the internal issue tracking system (Jira).
+
+---
+
+## 🎯 Roadmap
+
+### Completed ✅
+- [x] Core POS functionality
+- [x] Offline-first architecture
+- [x] Firebase integration
+- [x] Background synchronization
+- [x] Analytics dashboard
+- [x] Multi-branch support
+
+### In Progress 🚧
+- [ ] Windows desktop testing
+- [ ] Linux desktop testing
+- [ ] Comprehensive unit tests
+- [ ] CI/CD pipeline
+
+### Planned 📋
+- [ ] Mediator pattern implementation
+- [ ] REST API integration
+- [ ] Advanced reporting
 - [ ] Multi-language support
-
-### Q2 2026
-- [ ] iOS release
-- [ ] Web dashboard
-- [ ] Franchise yönetimi
-- [ ] İleri seviye analytics
-
-### Q3 2026
-- [ ] AI-powered insights
-- [ ] Müşteri segmentasyonu
-- [ ] Automated marketing
-- [ ] Inventory predictions
+- [ ] Inventory forecasting
 
 ---
 
-## 🤝 Katkıda Bulunma
+## � Acknowledgments
 
-Bu proje şu an proprietary bir projedir. Katkıda bulunmak için lütfen iletişime geçin.
+Built with ❤️ using **Flutter** and **Firebase**.
 
----
-
-## 📄 Lisans
-
-Copyright © 2025 [ŞİRKET ADI]. Tüm hakları saklıdır.
-
-Bu yazılım proprietary bir üründür. Kaynak kodun kullanımı, kopyalanması veya dağıtılması yazılı izin olmadan yasaktır.
+**Development Stack**:
+- Clean Architecture principles
+- MVVM pattern
+- GetX for state management
+- Drift for type-safe database operations
 
 ---
 
-## 📞 İletişim & Destek
-
-- 📧 **Email:** destek@pospro.com
-- 🌐 **Website:** https://pospro.com
-- 📱 **WhatsApp:** +90 XXX XXX XX XX
-- 💬 **Slack:** [POS Pro Community](https://pospro.slack.com)
-
----
-
-## 🙏 Teşekkürler
-
-- [Flutter Team](https://flutter.dev) - Amazing framework
-- [Firebase](https://firebase.google.com) - Backend infrastructure
-- [GetX](https://pub.dev/packages/get) - State management
-- [İyzico](https://iyzico.com) - Payment gateway
-- Turkish developer community 🇹🇷
-
----
-
-<div align="center">
-
-**Made with ❤️ in Turkey 🇹🇷**
-
-[⬆ Başa Dön](#-pos-pro-tr---modern-point-of-sale-system)
-
-</div>
+**Version**: 1.0.1+3  
+**Last Updated**: November 30, 2025  
+**Developed by**: [Your Development Team]

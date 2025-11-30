@@ -1,28 +1,55 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/utils/error_handler.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../../core/database/database_instance.dart';
 import '../../data/models/product_model.dart';
-import '../../data/repositories/product_repository.dart';
+import '../../data/repositories/hybrid_product_repository.dart';
 
 class ProductController extends GetxController {
-  final ProductRepository _productRepository = ProductRepository();
+  late final HybridProductRepository _productRepository;
   final RxList<Product> products = <Product>[].obs;
   final RxBool isLoading = false.obs;
 
   @override
   void onInit() {
     super.onInit();
+    // Hibrit repository'yi initialize et
+    _productRepository = HybridProductRepository(
+      localDb: db,
+      firestore: firestore,
+    );
+  }
+
+  @override
+  void onClose() {
+    _productRepository.dispose(); // Listener'ı temizle
+    super.onClose();
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
     fetchProducts();
   }
 
-  Future<void> fetchProducts() async {
+  Future<void> fetchProducts({String? filter, String? category}) async {
     isLoading.value = true;
     try {
       final List<Product> productList = await _productRepository.getProducts();
-      products.assignAll(productList);
+      
+      if (filter == 'low_stock') {
+        products.assignAll(productList.where((p) => p.stock <= p.criticalStockLevel).toList());
+      } else if (category != null) {
+        products.assignAll(productList.where((p) => p.category == category).toList());
+      } else {
+        products.assignAll(productList);
+      }
     } catch (e) {
-      ErrorHandler.handleApiError(e, customMessage: 'Ürünler yüklenemedi');
+      debugPrint('Ürünler yüklenemedi: $e');
+      // Hata durumunda boş liste ile devam et
+      products.clear();
     } finally {
       isLoading.value = false;
     }
@@ -55,7 +82,7 @@ class ProductController extends GetxController {
       await fetchProducts();
 
       // Stok uyarısı kontrolü
-      if (oldProduct != null && product.stock <= 10 && oldProduct.stock > 10) {
+      if (oldProduct != null && product.stock <= product.criticalStockLevel && oldProduct.stock > product.criticalStockLevel) {
         try {
           final notificationService = NotificationService();
           await notificationService.sendStockAlertNotification(
@@ -90,12 +117,15 @@ class ProductController extends GetxController {
   }
 
   Future<List<Product>> searchProducts(String query) async {
-    try {
-      return await _productRepository.searchProducts(query);
-    } catch (e) {
-      ErrorHandler.handleApiError(e, customMessage: 'Arama yapılamadı');
-      return [];
-    }
+    if (query.isEmpty) return [];
+    
+    // Bellekteki listeden arama yap (Daha hızlı ve az maliyetli)
+    final lowercaseQuery = query.toLowerCase();
+    return products.where((p) {
+      return p.name.toLowerCase().contains(lowercaseQuery) ||
+             (p.barcode != null && p.barcode!.contains(query)) ||
+             (p.category != null && p.category!.toLowerCase().contains(lowercaseQuery));
+    }).toList();
   }
 
   Future<List<Product>> getLowStockProducts(int threshold) async {
@@ -104,6 +134,50 @@ class ProductController extends GetxController {
     } catch (e) {
       ErrorHandler.handleApiError(e, customMessage: 'Düşük stok ürünleri alınamadı');
       return [];
+    }
+  }
+  // Favori Ürünler
+  List<Product> get favoriteProducts => products.where((p) => p.isFavorite).toList();
+
+  Future<void> toggleFavorite(Product product) async {
+    try {
+      final updatedProduct = product.copyWith(isFavorite: !product.isFavorite);
+      await _productRepository.updateProduct(updatedProduct);
+      
+      // Listeyi güncelle
+      final index = products.indexWhere((p) => p.id == product.id);
+      if (index != -1) {
+        products[index] = updatedProduct;
+      }
+      
+      Get.snackbar(
+        'Başarılı',
+        updatedProduct.isFavorite ? 'Favorilere eklendi' : 'Favorilerden çıkarıldı',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 1),
+      );
+    } catch (e) {
+      ErrorHandler.handleApiError(e, customMessage: 'Favori durumu güncellenemedi');
+    }
+  }
+  // Kritik Stoktaki Ürünler
+  List<Product> get criticalStockProducts => products.where((p) => p.stock <= p.criticalStockLevel).toList();
+
+  void sortProducts(String criteria) {
+    switch (criteria) {
+      case 'name_asc':
+        products.sort((a, b) => a.name.compareTo(b.name));
+        break;
+      case 'price_asc':
+        products.sort((a, b) => a.price.compareTo(b.price));
+        break;
+      case 'price_desc':
+        products.sort((a, b) => b.price.compareTo(a.price));
+        break;
+      case 'stock_desc':
+        products.sort((a, b) => b.stock.compareTo(a.stock));
+        break;
     }
   }
 }

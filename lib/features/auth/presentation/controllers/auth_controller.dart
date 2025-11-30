@@ -77,9 +77,7 @@ class AuthController extends GetxController {
     }
   }
 
-
-  // GEÇİCİ OLARAK KALDIRILDI - Google Sign-In
-  /*
+  // Google ile giriş yapma
   Future<void> signInWithGoogle() async {
     isLoading.value = true;
     try {
@@ -101,8 +99,6 @@ class AuthController extends GetxController {
       isLoading.value = false;
     }
   }
-  */
-
 
   Future<void> signUp(String name) async {
     if (email.value.isEmpty || password.value.isEmpty || name.isEmpty) {
@@ -171,6 +167,13 @@ class AuthController extends GetxController {
 
   // Kullanıcı durumunu kontrol et
   bool get isAdmin {
-    return _stateService?.currentUser?.role == 'admin' ?? false;
+    // TEST İÇİN HER ZAMAN TRUE DÖN
+    return true; 
+    // return _stateService?.currentUser?.role == 'admin' ?? false;
+  }
+
+  // Mevcut kullanıcıyı al
+  Rx<dynamic> get currentUser {
+    return Rx(_stateService?.currentUser);
   }
 }

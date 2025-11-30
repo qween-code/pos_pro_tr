@@ -10,7 +10,7 @@ class ProductRepository {
     return docRef.id;
   }
 
-  Future<List<Product>> getProducts({int limit = 100}) async {
+  Future<List<Product>> getProducts({int limit = 1000}) async {
     final querySnapshot = await _firestore.collection(_collectionName)
       .limit(limit)
       .get();

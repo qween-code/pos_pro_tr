@@ -1,0 +1,80 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/register_model.dart';
+
+class RegisterRepository {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final String _collection = 'registers';
+
+  // Aktif (açık) kasayı getir
+  Future<RegisterModel?> getOpenRegister() async {
+    try {
+      final snapshot = await _firestore
+          .collection(_collection)
+          .where('status', isEqualTo: 'open')
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        final data = snapshot.docs.first.data();
+        data['id'] = snapshot.docs.first.id;
+        return RegisterModel.fromJson(data);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting open register: $e');
+      return null;
+    }
+  }
+
+  // Yeni kasa aç
+  Future<RegisterModel> openRegister(RegisterModel register) async {
+    final docRef = _firestore.collection(_collection).doc();
+    final newRegister = register.copyWith(id: docRef.id);
+    await docRef.set(newRegister.toJson());
+    return newRegister;
+  }
+
+  // Kasayı kapat (Z Raporu)
+  Future<void> closeRegister(String id, double closingBalance, String notes) async {
+    await _firestore.collection(_collection).doc(id).update({
+      'closingTime': Timestamp.now(),
+      'closingBalance': closingBalance,
+      'status': 'closed',
+      'notes': notes,
+    });
+  }
+
+  // Satış yapıldığında kasa toplamlarını güncelle
+  Future<void> updateSales(String id, double amount, String paymentMethod) async {
+    final docRef = _firestore.collection(_collection).doc(id);
+    
+    if (paymentMethod == 'cash') {
+      await docRef.update({
+        'totalCashSales': FieldValue.increment(amount),
+      });
+    } else if (paymentMethod == 'card') {
+      await docRef.update({
+        'totalCardSales': FieldValue.increment(amount),
+      });
+    } else {
+      await docRef.update({
+        'totalOtherSales': FieldValue.increment(amount),
+      });
+    }
+  }
+
+  // Geçmiş kasa kayıtlarını getir
+  Future<List<RegisterModel>> getRegisterHistory() async {
+    final snapshot = await _firestore
+        .collection(_collection)
+        .orderBy('openingTime', descending: true)
+        .limit(20)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      data['id'] = doc.id;
+      return RegisterModel.fromJson(data);
+    }).toList();
+  }
+}

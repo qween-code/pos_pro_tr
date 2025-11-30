@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/customer_controller.dart';
 import '../../data/models/customer_model.dart';
+import 'customer_detail_screen.dart';
 import 'customer_add_edit_screen.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/error_widget.dart';
@@ -17,22 +18,12 @@ class CustomerListScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: Text(
-          'Müşteri Yönetimi',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: AppTheme.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: const Text('Müşteriler'),
         backgroundColor: Colors.transparent,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: AppTheme.cardGradient,
-          ),
-        ),
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, color: AppTheme.textPrimary),
+            icon: const Icon(Icons.search),
             onPressed: () {
               showSearch(
                 context: context,
@@ -42,57 +33,41 @@ class CustomerListScreen extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          gradient: AppTheme.primaryGradient,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.primary.withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: FloatingActionButton(
-          onPressed: () => Get.to(() => CustomerAddEditScreen()),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: const Icon(Icons.add, color: Colors.white),
-        ),
-      ),
       body: Obx(() {
         if (_customerController.isLoading.value) {
-          return ListView.builder(
-            itemCount: 5,
-            padding: const EdgeInsets.all(16),
-            itemBuilder: (context, index) => const SkeletonListTile(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
+
         if (_customerController.customers.isEmpty) {
-          return EmptyStateWidget(
-            message: 'Henüz müşteri eklenmemiş',
-            icon: Icons.people_outline,
-            action: ElevatedButton.icon(
-              onPressed: () => Get.to(() => CustomerAddEditScreen()),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.black,
-              ),
-              icon: const Icon(Icons.add),
-              label: const Text('İlk Müşteriyi Ekle'),
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.people_outline, size: 64, color: AppTheme.textSecondary),
+                const SizedBox(height: 16),
+                Text(
+                  'Henüz müşteri eklenmemiş',
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
+                ),
+              ],
             ),
           );
         }
+
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: _customerController.customers.length,
           itemBuilder: (context, index) {
-            final Customer customer = _customerController.customers[index];
+            final customer = _customerController.customers[index];
             return _buildCustomerCard(context, customer);
           },
         );
       }),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Get.to(() => CustomerAddEditScreen()),
+        backgroundColor: AppTheme.primary,
+        child: const Icon(Icons.add, color: AppTheme.background),
+      ),
     );
   }
 
@@ -116,7 +91,7 @@ class CustomerListScreen extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => Get.to(() => CustomerAddEditScreen(customer: customer)),
+          onTap: () => Get.to(() => CustomerDetailScreen(customer: customer)),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -166,6 +141,26 @@ class CustomerListScreen extends StatelessWidget {
                             ),
                           ],
                         ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: customer.balance > 0 
+                              ? Colors.red.withOpacity(0.1) 
+                              : (customer.balance < 0 ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Bakiye: ₺${customer.balance.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color: customer.balance > 0 
+                                ? Colors.red 
+                                : (customer.balance < 0 ? Colors.green : Colors.grey),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                       if (customer.loyaltyPoints > 0)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),

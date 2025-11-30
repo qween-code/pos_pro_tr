@@ -75,6 +75,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: const Text('GİRİŞ YAP'),
                 ),
+                const SizedBox(height: 20),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    final authController = Get.find<AuthController>();
+                    authController.signInWithGoogle();
+                  },
+                  icon: Image.asset(
+                    'assets/images/google_logo.png',
+                    height: 24,
+                    errorBuilder: (context, error, stackTrace) => 
+                      const Icon(Icons.g_mobiledata, color: Colors.white, size: 24),
+                  ),
+                  label: const Text('Google ile Giriş Yap'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white70),
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                ),
               ],
             ),
           ),
