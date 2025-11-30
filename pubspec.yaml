@@ -42,6 +42,7 @@ dependencies:
   drift_flutter: ^0.1.0
   sqlite3_flutter_libs: ^0.5.24
   workmanager: ^0.9.0  # Background task execution - updated to latest
+  dio: ^5.9.0
 
 dev_dependencies:
   flutter_test:
