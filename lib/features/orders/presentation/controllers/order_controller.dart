@@ -408,6 +408,15 @@ class OrderController extends GetxController {
 
         await _productRepository.updateProduct(updatedProduct);
 
+        // 📢 MEDIATOR: Publish stock change event
+        _mediator.publish(ProductStockChangedEvent(
+          productId: product.id!,
+          productName: product.name,
+          oldStock: product.stock,
+          newStock: newStock,
+          reason: 'sale',
+        ));
+
         if (newStock <= stockAlertThreshold) {
           try {
             await notificationService.sendStockAlertNotification(
@@ -539,6 +548,9 @@ class OrderController extends GetxController {
       isLoading.value = false;
     }
   }
+
+
+
   Future<void> printReceipt(Order order) async {
     try {
       await _pdfService.printOrderReceipt(order);
