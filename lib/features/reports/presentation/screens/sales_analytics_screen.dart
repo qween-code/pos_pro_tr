@@ -9,6 +9,7 @@ import '../../../orders/data/repositories/hybrid_order_repository.dart';
 import '../../../orders/data/models/order_model.dart' as models;
 import '../../../../core/database/database_instance.dart';
 import 'package:get/get.dart' hide Value;
+import '../../../orders/presentation/controllers/order_controller.dart';
 
 /// Satış Analizi Ekranı
 class SalesAnalyticsScreen extends StatefulWidget {
@@ -32,6 +33,7 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
   Map<String, double> paymentMethods = {};
   Map<int, double> hourlySales = {};
   List<TopProduct> topProducts = [];
+  List<models.Order> _currentFilteredOrders = []; // Filtrelenmiş siparişleri sakla
   Map<String, double> cashierPerformance = {};
 
   @override
@@ -106,7 +108,10 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
         if (order.status != 'completed') return false;
         
         return true;
+        return true;
       }).toList();
+      
+      _currentFilteredOrders = filteredOrders; // Listeyi sakla
 
       double sales = 0.0;
       Map<String, double> payments = {};
@@ -130,6 +135,7 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
         // Kasiyer Performansı
         final cashierName = order.cashierName ?? 'Bilinmeyen';
         cashiers[cashierName] = (cashiers[cashierName] ?? 0.0) + amount;
+        debugPrint('Kasiyer: $cashierName, Tutar: $amount'); // Debug log
 
         // Saatlik satış
         final hour = orderDate.hour;
@@ -306,13 +312,13 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
   Widget _buildSummaryCards() {
     return Row(
       children: [
-
         Expanded(
           child: _buildSummaryCard(
             'Toplam Satış\n(${_getPeriodLabel()})',
             '₺${totalSales.toStringAsFixed(2)}',
             Icons.attach_money,
             Colors.green,
+            onTap: () => _showOrderListDialog(),
           ),
         ),
         const SizedBox(width: 16),
@@ -322,45 +328,50 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
             totalOrders.toString(),
             Icons.shopping_bag,
             Colors.blue,
+            onTap: () => _showOrderListDialog(),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 12),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              value,
-              style: TextStyle(
-                color: color,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+  Widget _buildSummaryCard(String title, String value, IconData icon, Color color, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 12),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -766,6 +777,78 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
           Text(label, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
           Text(value, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
         ],
+      ),
+    );
+  }
+
+
+  void _showOrderListDialog() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: 500,
+          height: 600,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Sipariş Listesi (${_getPeriodLabel()})',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Get.back(),
+                  ),
+                ],
+              ),
+              const Divider(),
+              Expanded(
+                child: _currentFilteredOrders.isEmpty
+                    ? const Center(child: Text('Sipariş bulunamadı'))
+                    : ListView.builder(
+                        itemCount: _currentFilteredOrders.length,
+                        itemBuilder: (context, index) {
+                          final order = _currentFilteredOrders[index];
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: AppTheme.primary.withOpacity(0.1),
+                                child: Text('#${index + 1}'),
+                              ),
+                              title: Text('Sipariş #${order.id?.substring(0, 8) ?? "---"}'),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Tarih: ${DateFormat('dd.MM.yyyy HH:mm').format(order.orderDate)}'),
+                                  Text('Kasiyer: ${order.cashierName ?? "Bilinmeyen"}'),
+                                  Text('Ödeme: ${order.paymentMethod ?? "Bilinmeyen"}'),
+                                ],
+                              ),
+                              trailing: Text(
+                                '₺${order.totalAmount.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              onTap: () {
+                                // Detay gösterimi (opsiyonel)
+                              },
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
