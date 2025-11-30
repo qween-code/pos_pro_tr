@@ -109,7 +109,7 @@ class HybridOrderRepository {
           status: Value(order.status),
           customerName: Value(order.customerName),
           cashierName: Value(order.cashierName),
-          cashierId: Value(''), // TODO: Get current cashier ID
+          cashierId: Value(order.cashierId),
           branchId: Value(order.branchId),
           items: Value(itemsJson),
           payments: Value(paymentsJson),
@@ -129,6 +129,7 @@ class HybridOrderRepository {
         'status': order.status,
         'customerName': order.customerName,
         'cashierName': order.cashierName,
+        'cashierId': order.cashierId,
         'branchId': order.branchId,
         'items': order.items.map((e) => e.toJson()).toList(),
         'payments': order.payments.map((e) => e.toJson()).toList(),

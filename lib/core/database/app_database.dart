@@ -108,7 +108,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2; // Increment version for migration
+  int get schemaVersion => 3; // Increment version for migration
 
   // ========================================
   // AÇILIŞ BAĞLANTISI
@@ -129,7 +129,23 @@ class AppDatabase extends _$AppDatabase {
         },
         onUpgrade: (Migrator m, int from, int to) async {
           if (from < 2) {
-            // Migration for version 2: Make items column nullable
+            // Migration for version 2
+          }
+          if (from < 3) {
+            // Add new columns to Orders table
+            try {
+              await m.addColumn(orders, orders.cashierId);
+            } catch (e) {
+              // Column might already exist
+              print('Migration Error (cashierId): $e');
+            }
+            
+            try {
+              await m.addColumn(orders, orders.branchId);
+            } catch (e) {
+              // Column might already exist
+              print('Migration Error (branchId): $e');
+            }
           }
         },
       );
