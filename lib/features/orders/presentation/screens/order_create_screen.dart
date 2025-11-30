@@ -10,11 +10,18 @@ import '../../../../core/widgets/barcode_scanner_screen.dart';
 import '../../../../core/utils/error_handler.dart';
 import '../../../../core/constants/theme_constants.dart';
 
-class OrderCreateScreen extends StatelessWidget {
-  OrderCreateScreen({super.key});
+class OrderCreateScreen extends StatefulWidget {
+  const OrderCreateScreen({super.key});
 
+  @override
+  State<OrderCreateScreen> createState() => _OrderCreateScreenState();
+}
+
+class _OrderCreateScreenState extends State<OrderCreateScreen> {
   final orderController = Get.find<OrderController>();
   final productController = Get.find<ProductController>();
+  
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +212,9 @@ class OrderCreateScreen extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
         onChanged: (value) {
-          productController.searchProducts(value);
+          setState(() {
+            _searchQuery = value.toLowerCase();
+          });
         },
       ),
     );
@@ -213,9 +222,16 @@ class OrderCreateScreen extends StatelessWidget {
 
   Widget _buildProductGrid() {
     return Obx(() {
-      final products = productController.filteredProducts.isEmpty
-          ? productController.products
-          : productController.filteredProducts;
+      var products = productController.products.toList();
+      
+      // Apply search filter
+      if (_searchQuery.isNotEmpty) {
+        products = products.where((p) {
+          return p.name.toLowerCase().contains(_searchQuery) ||
+                 (p.barcode != null && p.barcode!.contains(_searchQuery)) ||
+                 (p.category != null && p.category!.toLowerCase().contains(_searchQuery));
+        }).toList();
+      }
 
       if (products.isEmpty) {
         return const Center(child: Text('Ürün bulunamadı'));
@@ -420,7 +436,7 @@ class OrderCreateScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                item.productName,
+                                item.productName ?? 'Ürün',
                                 style: const TextStyle(fontWeight: FontWeight.w600),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -824,15 +840,7 @@ class OrderCreateScreen extends StatelessWidget {
           orderController.setPaymentMethod(label);
           
           // Complete order
-          final result = await orderController.addOrder();
-          if (result != null) {
-            Get.snackbar(
-              'Başarılı',
-              'Sipariş oluşturuldu!',
-              backgroundColor: Colors.green,
-              colorText: Colors.white,
-            );
-          }
+          await orderController.addOrder();
         },
         icon: Icon(icon, color: Colors.white),
         label: Text(label, style: const TextStyle(fontSize: 16, color: Colors.white)),
@@ -845,18 +853,17 @@ class OrderCreateScreen extends StatelessWidget {
     );
   }
 
-  void _scanBarcodeForProduct() async {
-    final result = await Get.to(() => const BarcodeScannerScreen());
-    if (result != null) {
-      final product = productController.products.firstWhereOrNull(
-        (p) => p.barcode == result,
-      );
-      if (product != null) {
-        _showQuantityDialog(product);
-      } else {
-        ErrorHandler.handleValidationError('Ürün bulunamadı!');
-      }
-    }
+  void _scanBarcodeForProduct() {
+    Get.to(() => BarcodeScannerScreen(
+      onBarcodeScanned: (product) {
+        Get.back();
+        if (product != null) {
+          _showQuantityDialog(product);
+        } else {
+          ErrorHandler.handleValidationError('Ürün bulunamadı!');
+        }
+      },
+    ));
   }
 
   void _showPendingOrdersDialog() {
