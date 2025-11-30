@@ -119,35 +119,37 @@ class HybridOrderRepository {
         ),
       );
 
-      _firestore.collection('orders').doc(id).set({
-        'customerId': order.customerId,
-        'orderDate': Timestamp.fromDate(order.orderDate),
-        'totalAmount': order.totalAmount,
-        'taxAmount': order.taxAmount,
-        'discountAmount': order.discountAmount,
-        'paymentMethod': order.paymentMethod,
-        'status': order.status,
-        'customerName': order.customerName,
-        'cashierName': order.cashierName,
-        'cashierId': order.cashierId,
-        'branchId': order.branchId,
-        'items': order.items.map((e) => e.toJson()).toList(),
-        'payments': order.payments.map((e) => e.toJson()).toList(),
-        'createdAt': Timestamp.fromDate(now),
-        'updatedAt': Timestamp.fromDate(now),
-      }).then((_) {
-        (_localDb.update(_localDb.orders)..where((t) => t.id.equals(id)))
-            .write(const db.OrdersCompanion(syncedToFirebase: Value(true)));
-      }).catchError((e) {
-        debugPrint('❌ Firebase yazma hatası: $e');
-      });
-
+      // Sync to Firebase
+      _syncToFirebase(id, order.toJson());
+      
       return id;
     } catch (e) {
-      debugPrint('❌ Sipariş oluşturma hatası: $e');
+      debugPrint('Sipariş oluşturma hatası: $e');
       rethrow;
     }
   }
+
+  Future<void> updateOrderStatus(String orderId, String status) async {
+    // 1. Update Firestore
+    try {
+      await _firestore.collection('orders').doc(orderId).update({
+        'status': status,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('Firestore order update failed: $e');
+      // If offline, we should still update local DB and mark for sync (not implemented here fully)
+    }
+
+    // 2. Update Local DB
+    await (_localDb.update(_localDb.orders)
+      ..where((t) => t.id.equals(orderId)))
+      .write(db.OrdersCompanion(
+        status: Value(status),
+        updatedAt: Value(DateTime.now()),
+      ));
+  }
+
 
   Future<List<models.Order>> getOrders({int limit = 1000}) async {
     final orders = await (_localDb.select(_localDb.orders)
