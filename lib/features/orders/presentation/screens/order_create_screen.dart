@@ -281,7 +281,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Product Image Placeholder
+            // Product Image
             Container(
               height: 100,
               decoration: BoxDecoration(
@@ -292,13 +292,37 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                 ),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               ),
-              child: Center(
-                child: Icon(
-                  Icons.inventory_2_outlined,
-                  size: 48,
-                  color: AppTheme.primary.withOpacity(0.7),
-                ),
-              ),
+              clipBehavior: Clip.hardEdge,
+              child: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                  ? Image.network(
+                      product.imageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Center(
+                        child: Icon(
+                          Icons.inventory_2_outlined,
+                          size: 48,
+                          color: AppTheme.primary.withOpacity(0.7),
+                        ),
+                      ),
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                : null,
+                            color: AppTheme.primary,
+                          ),
+                        );
+                      },
+                    )
+                  : Center(
+                      child: Icon(
+                        Icons.inventory_2_outlined,
+                        size: 48,
+                        color: AppTheme.primary.withOpacity(0.7),
+                      ),
+                    ),
             ),
             Expanded(
               child: Padding(
@@ -359,26 +383,65 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
         // Customer Info
         Obx(() {
           final customer = orderController.selectedCustomer.value;
+          final hasCustomer = customer != null;
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.background,
+              gradient: hasCustomer
+                  ? LinearGradient(
+                      colors: [AppTheme.primary.withOpacity(0.15), AppTheme.primary.withOpacity(0.05)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              color: hasCustomer ? null : AppTheme.background,
               border: Border(bottom: BorderSide(color: AppTheme.primary.withOpacity(0.2))),
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: AppTheme.primary.withOpacity(0.2),
-                  child: Icon(Icons.person, color: AppTheme.primary),
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: hasCustomer ? Border.all(color: AppTheme.primary, width: 2) : null,
+                  ),
+                  child: CircleAvatar(
+                    backgroundColor: hasCustomer ? AppTheme.primary.withOpacity(0.3) : AppTheme.primary.withOpacity(0.2),
+                    child: Icon(
+                      hasCustomer ? Icons.person : Icons.person_outline,
+                      color: AppTheme.primary,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        customer?.name ?? 'Müşteri seçilmedi',
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                      Row(
+                        children: [
+                          Text(
+                            customer?.name ?? 'Müşteri seçilmedi',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: hasCustomer ? AppTheme.primary : AppTheme.textSecondary,
+                            ),
+                          ),
+                          if (hasCustomer) ..[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primary,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                '✓',
+                                style: TextStyle(color: AppTheme.background, fontSize: 10, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       if (customer != null)
                         Text(

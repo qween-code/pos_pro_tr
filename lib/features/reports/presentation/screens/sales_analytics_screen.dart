@@ -783,31 +783,6 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
                         itemCount: _currentFilteredOrders.length,
                         separatorBuilder: (context, index) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
-                          final order = _currentFilteredOrders[index];
-                          return Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[200]!),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.all(16),
-                              leading: Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primary.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    '#${index + 1}',
-                                    style: TextStyle(
-                                      color: AppTheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
                               title: Text(
                                 'Sipariş #${order.id?.substring(0, 8) ?? "---"}',
                                 style: const TextStyle(fontWeight: FontWeight.bold),
@@ -939,6 +914,172 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
           Text(value, style: TextStyle(color: AppTheme.textPrimary, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
         ],
       ),
+    );
+  }
+
+  void _showOrderDetailDialog(Order order) {
+    Get.dialog(
+      Dialog(
+        backgroundColor: AppTheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Container(
+          width: 500,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Sipariş Detayları',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                      ),
+                      Text(
+                        '#${order.id?.substring(0, 8) ?? "---"}',
+                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: AppTheme.primary),
+                    onPressed: () => Get.back(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.cardGradient,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    _buildDetailRow('Tarih', DateFormat('dd.MM.yyyy HH:mm').format(order.orderDate)),
+                    const Divider(color: AppTheme.primary, height: 24),
+                    _buildDetailRow('Kasiyer', order.cashierName ?? 'Bilinmeyen'),
+                    const Divider(color: AppTheme.primary, height: 24),
+                    _buildDetailRow('Müşteri', order.customerName ?? 'Misafir'),
+                    const Divider(color: AppTheme.primary, height: 24),
+                    _buildDetailRow('Ödeme Yöntemi', order.paymentMethod ?? 'Diğer'),
+                    const Divider(color: AppTheme.primary, height: 24),
+                    _buildDetailRow('Toplam Tutar', '₺${order.totalAmount.toStringAsFixed(2)}', isAmount: true),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Ürünler',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                constraints: const BoxConstraints(maxHeight: 200),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: order.items.length,
+                  separatorBuilder: (context, index) => const Divider(color: AppTheme.primary, height: 1),
+                  itemBuilder: (context, index) {
+                    final item = order.items[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.productName ?? 'Ürün',
+                              style: const TextStyle(color: AppTheme.textPrimary),
+                            ),
+                          ),
+                          Text(
+                            '${item.quantity}x',
+                            style: const TextStyle(color: AppTheme.textSecondary),
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            '₺${item.totalPrice.toStringAsFixed(2)}',
+                            style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Get.back();
+                        Get.snackbar(
+                          'Bilgi',
+                          'İade işlemi özelliği yakında eklenecek',
+                          backgroundColor: Colors.orange,
+                          colorText: Colors.white,
+                        );
+                      },
+                      icon: const Icon(Icons.replay_rounded),
+                      label: const Text('İade İşlemi'),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.error),
+                        foregroundColor: AppTheme.error,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Get.back();
+                        Get.snackbar(
+                          'Bilgi',
+                          'Yazdırma özelliği yakında eklenecek',
+                          backgroundColor: Colors.blue,
+                          colorText: Colors.white,
+                        );
+                      },
+                      icon: const Icon(Icons.print_rounded),
+                      label: const Text('Yazdır'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: AppTheme.background,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, {bool isAmount = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(color: AppTheme.textSecondary)),
+        Text(
+          value,
+          style: TextStyle(
+            color: isAmount ? AppTheme.primary : AppTheme.textPrimary,
+            fontWeight: isAmount ? FontWeight.bold : FontWeight.normal,
+            fontSize: isAmount ? 16 : 14,
+          ),
+        ),
+      ],
     );
   }
 
