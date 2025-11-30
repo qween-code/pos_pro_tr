@@ -139,13 +139,13 @@ class OrderItem {
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
       id: json['id']?.toString(),
-      orderId: json['orderId'],
-      productId: json['productId'],
-      quantity: json['quantity'],
+      orderId: json['orderId']?.toString() ?? '',
+      productId: json['productId']?.toString() ?? '',
+      quantity: (json['quantity'] as int?) ?? 1,
       unitPrice: (json['unitPrice'] ?? 0).toDouble(),
       taxRate: (json['taxRate'] ?? 0).toDouble(),
-      productName: json['productName'],
-      refundedQuantity: json['refundedQuantity'] ?? 0,
+      productName: json['productName']?.toString(),
+      refundedQuantity: (json['refundedQuantity'] as int?) ?? 0,
     );
   }
 

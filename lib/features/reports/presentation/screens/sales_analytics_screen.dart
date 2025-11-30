@@ -871,42 +871,38 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
   }
 
   void _showZReportDialog() {
-    // Mevcut Z Raporu dialogunu koruyalım ama tasarımını iyileştirelim
     Get.dialog(
       Dialog(
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Container(
           width: 400,
           padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
+                  color: AppTheme.primary.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.receipt_long, color: AppTheme.primary, size: 32),
+                child: const Icon(Icons.receipt_long, color: AppTheme.primary, size: 32),
               ),
               const SizedBox(height: 16),
               const Text(
                 'Z Raporu (Gün Sonu)',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
               ),
               const SizedBox(height: 8),
               Text(
                 DateFormat('dd.MM.yyyy HH:mm').format(DateTime.now()),
-                style: TextStyle(color: Colors.grey[600]),
+                style: const TextStyle(color: AppTheme.textSecondary),
               ),
               const SizedBox(height: 24),
               _buildReportRow('Toplam Satış', '₺${totalSales.toStringAsFixed(2)}', isBold: true),
               _buildReportRow('Toplam Sipariş', '$totalOrders Adet'),
-              const Divider(height: 32),
+              const Divider(height: 32, color: AppTheme.primary),
               ...paymentMethods.entries.map((e) => _buildReportRow(e.key, '₺${e.value.toStringAsFixed(2)}')),
               const SizedBox(height: 24),
               SizedBox(
@@ -920,6 +916,7 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
                   label: const Text('Yazdır ve Kapat'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
+                    foregroundColor: AppTheme.background,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -938,8 +935,8 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[700], fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
-          Text(value, style: TextStyle(color: Colors.black87, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Text(label, style: TextStyle(color: AppTheme.textSecondary, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Text(value, style: TextStyle(color: AppTheme.textPrimary, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
         ],
       ),
     );
