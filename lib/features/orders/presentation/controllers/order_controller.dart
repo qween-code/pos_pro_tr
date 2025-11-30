@@ -14,11 +14,14 @@ import '../../../register/presentation/controllers/register_controller.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../../core/services/pdf_service.dart';
 import '../../../../core/services/transaction_service.dart';
+import '../../../../core/mediator/app_mediator.dart';
+import '../../../../core/events/app_events.dart';
 
 class OrderController extends GetxController {
   late final HybridOrderRepository _orderRepository;
   late final HybridCustomerRepository _customerRepository;
   late final HybridProductRepository _productRepository;
+  final AppMediator _mediator = AppMediator();
   
   final PdfService _pdfService = PdfService();
 
@@ -197,7 +200,9 @@ class OrderController extends GetxController {
         debugPrint('Bildirim gönderilemedi: $e');
       }
 
-      // Sipariş tamamlandıktan sonra sepeti temizle
+      // 📢 MEDIATOR: Publish OrderCompletedEvent
+      _mediator.publish(OrderCompletedEvent.fromOrder(orderId, newOrder));
+      
       // Sipariş tamamlandıktan sonra sepeti temizle
       clearOrder();
 
