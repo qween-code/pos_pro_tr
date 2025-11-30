@@ -44,7 +44,7 @@ class OrderCompletedEvent extends AppEvent {
       totalAmount: order.totalAmount,
       taxAmount: order.taxAmount,
       discountAmount: order.discountAmount,
-      paymentMethod: order.paymentMethod,
+      paymentMethod: order.paymentMethod ?? 'Bilinmeyen',
       items: order.items,
       orderDate: order.orderDate,
     );

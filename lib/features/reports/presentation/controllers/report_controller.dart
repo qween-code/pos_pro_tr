@@ -27,7 +27,7 @@ class ReportController extends GetxController {
     // 📢 MEDIATOR: Subscribe to OrderCompletedEvent for dashboard refresh
     _orderEventSubscription = _mediator.on<OrderCompletedEvent>().listen((event) {
       debugPrint('📊 Dashboard Auto-Refresh: Order ${event.orderId} completed');
-      loadDashboardData();
+      fetchReportData();
     });
   }
   

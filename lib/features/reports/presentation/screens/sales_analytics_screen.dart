@@ -119,7 +119,7 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
       // Siparişleri işle
       for (final order in filteredOrders) {
         final amount = order.totalAmount;
-        final method = order.paymentMethod;
+        final method = order.paymentMethod ?? 'Bilinmeyen';
         final orderDate = order.orderDate;
 
         sales += amount;
@@ -137,7 +137,7 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
 
         // En çok satan ürünler
         for (var item in order.items) {
-          final productName = item.productName;
+          final productName = item.productName ?? 'Bilinmeyen Ürün';
           final quantity = item.quantity;
           final total = item.total;
 

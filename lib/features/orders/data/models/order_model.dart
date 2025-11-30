@@ -10,6 +10,7 @@ class Order {
   final String? customerName;
   final List<PaymentDetail> payments;
   final String? cashierName;
+  final String? cashierId;
   final String? branchId;
   final List<OrderItem> items; // Denormalized items
 
@@ -25,6 +26,7 @@ class Order {
     this.customerName,
     this.payments = const [],
     this.cashierName,
+    this.cashierId,
     this.branchId,
     this.items = const [],
   });
@@ -47,6 +49,7 @@ class Order {
               .toList() ??
           [],
       cashierName: json['cashierName'],
+      cashierId: json['cashierId'],
       branchId: json['branchId'],
       items: (json['items'] as List<dynamic>?)
               ?.map((e) => OrderItem.fromJson(e))
@@ -68,6 +71,7 @@ class Order {
       'customerName': customerName,
       'payments': payments.map((e) => e.toJson()).toList(),
       'cashierName': cashierName,
+      'cashierId': cashierId,
       'branchId': branchId,
       'items': items.map((e) => e.toJson()).toList(),
     };
@@ -88,6 +92,7 @@ class Order {
     String? customerName,
     List<PaymentDetail>? payments,
     String? cashierName,
+    String? cashierId,
     String? branchId,
     List<OrderItem>? items,
   }) {
@@ -103,6 +108,7 @@ class Order {
       customerName: customerName ?? this.customerName,
       payments: payments ?? this.payments,
       cashierName: cashierName ?? this.cashierName,
+      cashierId: cashierId ?? this.cashierId,
       branchId: branchId ?? this.branchId,
       items: items ?? this.items,
     );
