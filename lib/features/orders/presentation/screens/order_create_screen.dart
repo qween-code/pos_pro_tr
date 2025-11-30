@@ -28,7 +28,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
     final isTablet = MediaQuery.of(context).size.width > 600;
     
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: AppTheme.background,
       appBar: _buildAppBar(),
       body: isTablet ? _buildTabletLayout() : _buildMobileLayout(),
     );
@@ -38,12 +38,12 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
     return AppBar(
       title: const Text(
         'Yeni Satış',
-        style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.surface,
       elevation: 0,
       centerTitle: false,
-      iconTheme: const IconThemeData(color: Colors.black87),
+      iconTheme: const IconThemeData(color: AppTheme.primary),
       actions: [
         IconButton(
           icon: const Icon(Icons.qr_code_scanner),
@@ -66,7 +66,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: const BoxDecoration(
-                      color: Colors.red,
+                      color: AppTheme.error,
                       shape: BoxShape.circle,
                     ),
                     constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
@@ -105,9 +105,9 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
           flex: 4,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.surface,
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(-2, 0)),
+                BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(-2, 0)),
               ],
             ),
             child: _buildCart(),
@@ -133,10 +133,10 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: AppTheme.cardGradient,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Row(
@@ -144,7 +144,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
           Expanded(
             child: _buildQuickButton(
               icon: Icons.person_add_outlined,
-              label: 'Müşteri Seç',
+              label: 'Müşteri',
               onTap: _showCustomerSelectionDialog,
             ),
           ),
@@ -152,7 +152,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
           Expanded(
             child: _buildQuickButton(
               icon: Icons.add_box_outlined,
-              label: 'Manuel Ürün',
+              label: 'Manuel',
               onTap: _showManualItemDialog,
             ),
           ),
@@ -160,7 +160,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
           Expanded(
             child: _buildQuickButton(
               icon: Icons.pause_circle_outlined,
-              label: 'Park Et',
+              label: 'Park',
               onTap: () {
                 orderController.parkOrder();
               },
@@ -178,8 +178,9 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F7FA),
+          color: AppTheme.background,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.primary.withOpacity(0.3)),
         ),
         child: Column(
           children: [
@@ -187,7 +188,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -200,11 +201,13 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: TextField(
+        style: const TextStyle(color: AppTheme.textPrimary),
         decoration: InputDecoration(
           hintText: 'Ürün ara...',
-          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+          hintStyle: const TextStyle(color: AppTheme.textSecondary),
+          prefixIcon: const Icon(Icons.search, color: AppTheme.primary),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: AppTheme.surface,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -234,7 +237,16 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
       }
 
       if (products.isEmpty) {
-        return const Center(child: Text('Ürün bulunamadı'));
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.inventory_2_outlined, size: 64, color: AppTheme.textSecondary.withOpacity(0.5)),
+              const SizedBox(height: 16),
+              const Text('Ürün bulunamadı', style: TextStyle(color: AppTheme.textSecondary)),
+            ],
+          ),
+        );
       }
 
       return GridView.builder(
@@ -259,10 +271,11 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          gradient: AppTheme.cardGradient,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 2)),
           ],
         ),
         child: Column(
@@ -273,7 +286,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
               height: 100,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppTheme.primary.withOpacity(0.1), AppTheme.primary.withOpacity(0.05)],
+                  colors: [AppTheme.primary.withOpacity(0.2), AppTheme.secondary.withOpacity(0.1)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -283,7 +296,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                 child: Icon(
                   Icons.inventory_2_outlined,
                   size: 48,
-                  color: AppTheme.primary.withOpacity(0.5),
+                  color: AppTheme.primary.withOpacity(0.7),
                 ),
               ),
             ),
@@ -295,7 +308,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                   children: [
                     Text(
                       product.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textPrimary),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -315,14 +328,14 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: product.stock > 10
-                                ? Colors.green.withOpacity(0.1)
-                                : Colors.orange.withOpacity(0.1),
+                                ? AppTheme.primary.withOpacity(0.2)
+                                : AppTheme.error.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            'Stok: ${product.stock}',
+                            '${product.stock}',
                             style: TextStyle(
-                              color: product.stock > 10 ? Colors.green[700] : Colors.orange[700],
+                              color: product.stock > 10 ? AppTheme.primary : AppTheme.error,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -349,13 +362,13 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFF5F7FA),
-              border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+              color: AppTheme.background,
+              border: Border(bottom: BorderSide(color: AppTheme.primary.withOpacity(0.2))),
             ),
             child: Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: AppTheme.primary.withOpacity(0.1),
+                  backgroundColor: AppTheme.primary.withOpacity(0.2),
                   child: Icon(Icons.person, color: AppTheme.primary),
                 ),
                 const SizedBox(width: 12),
@@ -365,18 +378,18 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                     children: [
                       Text(
                         customer?.name ?? 'Müşteri seçilmedi',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                       ),
                       if (customer != null)
                         Text(
                           customer.phone ?? '',
-                          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                         ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 20),
+                  icon: const Icon(Icons.edit_outlined, size: 20, color: AppTheme.primary),
                   onPressed: _showCustomerSelectionDialog,
                 ),
               ],
@@ -393,9 +406,9 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey[300]),
+                    Icon(Icons.shopping_cart_outlined, size: 64, color: AppTheme.textSecondary.withOpacity(0.5)),
                     const SizedBox(height: 16),
-                    Text('Sepet boş', style: TextStyle(color: Colors.grey[500])),
+                    const Text('Sepet boş', style: TextStyle(color: AppTheme.textSecondary)),
                   ],
                 ),
               );
@@ -414,7 +427,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: 20),
                     decoration: BoxDecoration(
-                      color: Colors.red,
+                      color: AppTheme.error,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.delete, color: Colors.white),
@@ -425,9 +438,9 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      gradient: AppTheme.cardGradient,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[200]!),
+                      border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
                     ),
                     child: Row(
                       children: [
@@ -437,14 +450,14 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                             children: [
                               Text(
                                 item.productName ?? 'Ürün',
-                                style: const TextStyle(fontWeight: FontWeight.w600),
+                                style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 '₺${item.unitPrice.toStringAsFixed(2)} × ${item.quantity}',
-                                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                               ),
                             ],
                           ),
@@ -453,7 +466,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.remove_circle_outline, size: 20),
-                              color: Colors.red,
+                              color: AppTheme.error,
                               onPressed: () {
                                 if (item.quantity > 1) {
                                   orderController.updateQuantity(item.productId, item.quantity - 1);
@@ -464,11 +477,11 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                             ),
                             Text(
                               '${item.quantity}',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                             ),
                             IconButton(
                               icon: const Icon(Icons.add_circle_outline, size: 20),
-                              color: Colors.green,
+                              color: AppTheme.primary,
                               onPressed: () {
                                 orderController.updateQuantity(item.productId, item.quantity + 1);
                               },
@@ -502,9 +515,9 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: AppTheme.cardGradient,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -2)),
+          BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, -2)),
         ],
       ),
       child: Column(
@@ -517,13 +530,13 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
             }
             return const SizedBox.shrink();
           }),
-          const Divider(height: 24),
+          const Divider(height: 24, color: AppTheme.primary),
           Obx(() {
             final total = orderController.currentTotal.value;
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('TOPLAM', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text('TOPLAM', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                 Text(
                   '₺${total.toStringAsFixed(2)}',
                   style: const TextStyle(
@@ -549,12 +562,13 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primary,
+                foregroundColor: AppTheme.background,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
               ),
               child: const Text(
-                'Ödeme Al',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                'ÖDEME AL',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -571,9 +585,9 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          gradient: AppTheme.cardGradient,
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -2)),
+            BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, -2)),
           ],
         ),
         child: SafeArea(
@@ -584,7 +598,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('$itemCount Ürün', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                    Text('$itemCount Ürün', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                     const SizedBox(height: 4),
                     Text(
                       '₺${total.toStringAsFixed(2)}',
@@ -603,10 +617,11 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
+                  foregroundColor: AppTheme.background,
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Sepete Git', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                child: const Text('Sepete Git', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -621,12 +636,12 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[700])),
+          Text(label, style: const TextStyle(color: AppTheme.textSecondary)),
           Text(
             '₺${amount.toStringAsFixed(2)}',
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: isDiscount ? Colors.red : Colors.black87,
+              color: isDiscount ? AppTheme.error : AppTheme.textPrimary,
             ),
           ),
         ],
@@ -637,6 +652,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
   void _showMobileCartDialog() {
     Get.dialog(
       Dialog(
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         insetPadding: const EdgeInsets.all(16),
         child: SizedBox(
@@ -655,6 +671,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
     
     Get.dialog(
       Dialog(
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -663,7 +680,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
             children: [
               Text(
                 product.name,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
@@ -676,11 +693,13 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                 controller: quantityController,
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Miktar',
+                  labelStyle: const TextStyle(color: AppTheme.textSecondary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   suffixText: 'Adet',
+                  suffixStyle: const TextStyle(color: AppTheme.textSecondary),
                 ),
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
@@ -691,10 +710,11 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                     child: OutlinedButton(
                       onPressed: () => Get.back(),
                       style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.primary),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('İptal'),
+                      child: const Text('İptal', style: TextStyle(color: AppTheme.primary)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -709,10 +729,11 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primary,
+                        foregroundColor: AppTheme.background,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Ekle', style: TextStyle(color: Colors.white)),
+                      child: const Text('Ekle'),
                     ),
                   ),
                 ],
@@ -730,6 +751,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
 
     Get.dialog(
       Dialog(
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: SizedBox(
           width: 400,
@@ -740,21 +762,21 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                 padding: const EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    const Text('Müşteri Seç', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text('Müşteri Seç', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Icons.close),
+                      icon: const Icon(Icons.close, color: AppTheme.primary),
                       onPressed: () => Get.back(),
                     ),
                   ],
                 ),
               ),
-              const Divider(height: 1),
+              Divider(height: 1, color: AppTheme.primary.withOpacity(0.2)),
               Expanded(
                 child: Obx(() {
                   final customers = customerController.customers;
                   if (customers.isEmpty) {
-                    return const Center(child: Text('Müşteri bulunamadı'));
+                    return const Center(child: Text('Müşteri bulunamadı', style: TextStyle(color: AppTheme.textSecondary)));
                   }
 
                   return ListView.builder(
@@ -763,14 +785,14 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                       final customer = customers[index];
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: AppTheme.primary.withOpacity(0.1),
+                          backgroundColor: AppTheme.primary.withOpacity(0.2),
                           child: Text(
                             customer.name[0].toUpperCase(),
                             style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold),
                           ),
                         ),
-                        title: Text(customer.name),
-                        subtitle: Text(customer.phone ?? ''),
+                        title: Text(customer.name, style: const TextStyle(color: AppTheme.textPrimary)),
+                        subtitle: Text(customer.phone ?? '', style: const TextStyle(color: AppTheme.textSecondary)),
                         onTap: () {
                           orderController.setCustomer(customer);
                           Get.back();
@@ -790,6 +812,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
   void _showConfirmOrderDialog() {
     Get.dialog(
       Dialog(
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -799,7 +822,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
+                  color: AppTheme.primary.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.payment, size: 48, color: AppTheme.primary),
@@ -807,22 +830,23 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
               const SizedBox(height: 16),
               const Text(
                 'Ödeme Yöntemi Seçin',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
               ),
               const SizedBox(height: 24),
-              _buildPaymentButton('Nakit', Icons.money, Colors.green),
+              _buildPaymentButton('Nakit', Icons.money, AppTheme.primary),
               const SizedBox(height: 12),
-              _buildPaymentButton('Kredi Kartı', Icons.credit_card, Colors.blue),
+              _buildPaymentButton('Kredi Kartı', Icons.credit_card, AppTheme.secondary),
               const SizedBox(height: 12),
-              _buildPaymentButton('Havale/EFT', Icons.account_balance, Colors.orange),
+              _buildPaymentButton('Havale/EFT', Icons.account_balance, const Color(0xFFFFA500)),
               const SizedBox(height: 24),
               OutlinedButton(
                 onPressed: () => Get.back(),
                 style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppTheme.primary),
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('İptal'),
+                child: const Text('İptal', style: TextStyle(color: AppTheme.primary)),
               ),
             ],
           ),
@@ -836,16 +860,22 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
       width: double.infinity,
       child: ElevatedButton.icon(
         onPressed: () async {
-          Get.back(); // Close payment dialog
-          orderController.setPaymentMethod(label);
-          
-          // Complete order
-          await orderController.addOrder();
+          try {
+            Get.back(); // Close payment dialog
+            orderController.setPaymentMethod(label);
+            
+            // Complete order
+            await orderController.addOrder();
+          } catch (e) {
+            debugPrint('Ödeme hatası: $e');
+            ErrorHandler.handleApiError(e, customMessage: 'Ödeme alınamadı');
+          }
         },
-        icon: Icon(icon, color: Colors.white),
-        label: Text(label, style: const TextStyle(fontSize: 16, color: Colors.white)),
+        icon: Icon(icon, color: AppTheme.background),
+        label: Text(label, style: const TextStyle(fontSize: 16)),
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
+          foregroundColor: AppTheme.background,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -869,6 +899,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
   void _showPendingOrdersDialog() {
     Get.dialog(
       Dialog(
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: SizedBox(
           width: 400,
@@ -879,21 +910,21 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                 padding: const EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    const Text('Bekleyen Siparişler', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text('Bekleyen Siparişler', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Icons.close),
+                      icon: const Icon(Icons.close, color: AppTheme.primary),
                       onPressed: () => Get.back(),
                     ),
                   ],
                 ),
               ),
-              const Divider(height: 1),
+              Divider(height: 1, color: AppTheme.primary.withOpacity(0.2)),
               Expanded(
                 child: Obx(() {
                   final orders = orderController.parkedOrders;
                   if (orders.isEmpty) {
-                    return const Center(child: Text('Bekleyen sipariş yok'));
+                    return const Center(child: Text('Bekleyen sipariş yok', style: TextStyle(color: AppTheme.textSecondary)));
                   }
 
                   return ListView.builder(
@@ -903,12 +934,12 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                       return ListTile(
                         leading: const CircleAvatar(
                           backgroundColor: Color(0xFFFFA500),
-                          child: Icon(Icons.pause, color: Colors.white),
+                          child: Icon(Icons.pause, color: AppTheme.background),
                         ),
-                        title: Text(order.note),
-                        subtitle: Text('${order.items.length} ürün - ₺${order.totalAmount.toStringAsFixed(2)}'),
+                        title: Text(order.note, style: const TextStyle(color: AppTheme.textPrimary)),
+                        subtitle: Text('${order.items.length} ürün - ₺${order.totalAmount.toStringAsFixed(2)}', style: const TextStyle(color: AppTheme.textSecondary)),
                         trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
+                          icon: const Icon(Icons.delete, color: AppTheme.error),
                           onPressed: () {
                             orderController.deletePendingOrder(order);
                           },
@@ -936,18 +967,21 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
 
     Get.dialog(
       Dialog(
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Manuel Ürün Ekle', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const Text('Manuel Ürün Ekle', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
               const SizedBox(height: 24),
               TextField(
                 controller: nameController,
+                style: const TextStyle(color: AppTheme.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Ürün Adı',
+                  labelStyle: const TextStyle(color: AppTheme.textSecondary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -955,9 +989,12 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
               TextField(
                 controller: priceController,
                 keyboardType: TextInputType.number,
+                style: const TextStyle(color: AppTheme.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Fiyat',
+                  labelStyle: const TextStyle(color: AppTheme.textSecondary),
                   prefixText: '₺',
+                  prefixStyle: const TextStyle(color: AppTheme.textPrimary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -965,8 +1002,10 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
               TextField(
                 controller: quantityController,
                 keyboardType: TextInputType.number,
+                style: const TextStyle(color: AppTheme.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Miktar',
+                  labelStyle: const TextStyle(color: AppTheme.textSecondary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -977,10 +1016,11 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                     child: OutlinedButton(
                       onPressed: () => Get.back(),
                       style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.primary),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('İptal'),
+                      child: const Text('İptal', style: TextStyle(color: AppTheme.primary)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -1000,10 +1040,11 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primary,
+                        foregroundColor: AppTheme.background,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Ekle', style: TextStyle(color: Colors.white)),
+                      child: const Text('Ekle'),
                     ),
                   ),
                 ],
