@@ -284,4 +284,20 @@ class HybridOrderRepository {
   void dispose() {
     _firebaseListener?.cancel();
   }
+
+  Future<void> _syncToFirebase(String id, Map<String, dynamic> data) async {
+    try {
+      await _firestore.collection('orders').doc(id).set({
+        ...data,
+        'orderDate': Timestamp.fromDate(DateTime.parse(data['orderDate'])),
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      
+      await (_localDb.update(_localDb.orders)..where((t) => t.id.equals(id)))
+          .write(const db.OrdersCompanion(syncedToFirebase: Value(true)));
+    } catch (e) {
+      debugPrint('❌ Firebase sync hatası: $e');
+    }
+  }
 }
