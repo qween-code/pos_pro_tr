@@ -814,19 +814,6 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
                                 padding: const EdgeInsets.only(top: 8),
                                 child: Row(
                                   children: [
-                                    Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      DateFormat('HH:mm').format(order.orderDate),
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Icon(Icons.person_outline, size: 14, color: Colors.grey[500]),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      order.cashierName ?? "Bilinmeyen",
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                    ),
                                   ],
                                 ),
                               ),
@@ -940,7 +927,7 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
     );
   }
 
-  void _showOrderDetailDialog(Order order) {
+  void _showOrderDetailDialog(models.Order order) {
     Get.dialog(
       Dialog(
         backgroundColor: AppTheme.surface,

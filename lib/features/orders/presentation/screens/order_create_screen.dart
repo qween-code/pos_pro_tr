@@ -427,7 +427,7 @@ class _OrderCreateScreenState extends State<OrderCreateScreen> {
                               color: hasCustomer ? AppTheme.primary : AppTheme.textSecondary,
                             ),
                           ),
-                          if (hasCustomer) ..[
+                          if (hasCustomer) ...[
                             const SizedBox(width: 6),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
