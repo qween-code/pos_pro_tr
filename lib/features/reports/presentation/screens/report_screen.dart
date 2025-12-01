@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/constants/theme_constants.dart';
 import '../controllers/report_controller.dart';
-import 'product_analytics_screen.dart';
+import 'advanced_product_analytics_screen.dart';
 
 class ReportScreen extends StatelessWidget {
   final ReportController _controller = Get.put(ReportController());
@@ -40,6 +41,8 @@ class ReportScreen extends StatelessWidget {
                         _buildPeriodSelector(),
                         const SizedBox(height: 24),
                         _buildSalesOverview(),
+                        const SizedBox(height: 24),
+                        _buildWeeklySalesChart(),
                         const SizedBox(height: 24),
                         _buildMetricsGrid(),
                         const SizedBox(height: 24),
@@ -132,33 +135,41 @@ class ReportScreen extends StatelessWidget {
   Widget _buildQuickAccess() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: _buildAccessCard(
-              'Çalışan Performansı',
-              Icons.people_rounded,
-              const Color(0xFF8B5CF6),
-              () => Get.toNamed('/reports/cashier'),
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: _buildAccessCard(
+                  'Çalışan Performansı',
+                  Icons.people_rounded,
+                  const Color(0xFF8B5CF6),
+                  () => Get.toNamed('/reports/cashier'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildAccessCard(
+                  'Z Raporu',
+                  Icons.receipt_long_rounded,
+                  const Color(0xFFF59E0B),
+                  () => Get.toNamed('/reports/sales'),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildAccessCard(
-              'Z Raporu',
-              Icons.receipt_long_rounded,
-              const Color(0xFFF59E0B),
-              () => Get.toNamed('/reports/sales'),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildAccessCard(
-              'Ürün Analizi',
-              Icons.inventory_2_rounded,
-              const Color(0xFF10B981),
-              () => Get.to(() => const AdvancedProductAnalyticsScreen()),
-            ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildAccessCard(
+                  'Gelişmiş Ürün Analizi',
+                  Icons.analytics_rounded,
+                  const Color(0xFF10B981),
+                  () => Get.to(() => const AdvancedProductAnalyticsScreen()),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -741,6 +752,184 @@ class ReportScreen extends StatelessWidget {
                     ),
                   );
                 }).toList(),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeeklySalesChart() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Haftalık Satış Trendi',
+                style: TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Obx(() => Text(
+                'Son 7 Gün',
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 12,
+                ),
+              )),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Obx(() {
+            final salesData = _controller.weeklySales;
+            
+            if (salesData.isEmpty) {
+              return Container(
+                height: 200,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.cardGradient,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Henüz satış verisi yok',
+                    style: TextStyle(color: AppTheme.textSecondary),
+                  ),
+                ),
+              );
+            }
+
+            final maxY = salesData.map((e) => e.amount).reduce((a, b) => a > b ? a : b);
+            final safeMaxY = maxY > 0 ? maxY * 1.2 : 100.0;
+
+            return Container(
+              height: 250,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: AppTheme.cardGradient,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: BarChart(
+                BarChartData(
+                  alignment: BarChartAlignment.spaceAround,
+                  maxY: safeMaxY,
+                  minY: 0,
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchTooltipData: BarTouchTooltipData(
+                      tooltipBgColor: AppTheme.primary.withOpacity(0.9),
+                      tooltipRoundedRadius: 8,
+                      tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        return BarTooltipItem(
+                          '₺${rod.toY.toStringAsFixed(0)}',
+                          const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          if (value.toInt() >= 0 && value.toInt() < salesData.length) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                salesData[value.toInt()].dayName,
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            );
+                          }
+                          return const Text('');
+                        },
+                        reservedSize: 30,
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 45,
+                        getTitlesWidget: (value, meta) {
+                          if (value == 0) {
+                            return const Text('₺0', style: TextStyle(color: AppTheme.textSecondary, fontSize: 10));
+                          }
+                          if (value >= safeMaxY * 0.9) {
+                            return Text(
+                              '₺${(value / 1000).toStringAsFixed(0)}k',
+                              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 10),
+                            );
+                          }
+                          return const Text('');
+                        },
+                      ),
+                    ),
+                    rightTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                  ),
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: safeMaxY / 4,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: AppTheme.textSecondary.withOpacity(0.1),
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
+                  borderData: FlBorderData(show: false),
+                  barGroups: List.generate(
+                    salesData.length,
+                    (index) => BarChartGroupData(
+                      x: index,
+                      barRods: [
+                        BarChartRodData(
+                          toY: salesData[index].amount,
+                          gradient: LinearGradient(
+                            colors: [
+                              AppTheme.primary,
+                              AppTheme.primary.withOpacity(0.7),
+                            ],
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                          ),
+                          width: 24,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(4),
+                          ),
+                          backDrawRodData: BackgroundBarChartRodData(
+                            show: true,
+                            toY: safeMaxY,
+                            color: AppTheme.textSecondary.withOpacity(0.05),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             );
           }),
