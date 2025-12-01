@@ -5,6 +5,7 @@
 ### Framework & Dil
 - **Flutter**: 3.x (Cross-platform mobil uygulama framework)
 - **Dart**: 3.x (Programlama dili)
+- **Target Platforms**: Android (Min SDK 23) & iOS (12.0+)
 
 ### State Management
 - **GetX**: State management, routing ve dependency injection
@@ -51,6 +52,13 @@
 ### Özellikler
 - `mobile_scanner`: Barkod okuma (kamera)
 - `flutter_local_notifications`: Yerel bildirimler
+
+### REST API
+- `dio`: HTTP client & REST API desteği
+  - CRUD operations
+  - Interceptors (Auth, Retry)
+  - Error handling
+  - ERP integration support
 
 ### Utilities
 - `get`: GetX framework (state management + routing)
@@ -160,10 +168,16 @@ lib/
 - **NDK Version**: 27.0.12077973
 - **Kotlin**: 1.x
 - **Gradle**: 8.x
+- **Status**: ✅ Production Ready
 
-### iOS (Hazır)
-- iOS 12.0+
-- Swift 5.x
+### iOS
+- **Min Version**: iOS 12.0+
+- **Swift**: 5.x
+- **Status**: ✅ Production Ready
+
+### Tablet Support
+- Android tablets (7" - 13")
+- iPad & iPad Pro
 
 ## 🛠️ Geliştirme Araçları
 

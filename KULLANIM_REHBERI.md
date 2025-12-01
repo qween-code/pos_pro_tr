@@ -1,6 +1,8 @@
 # 📘 PosPro TR - Kullanım Rehberi
 
-Bu rehber, PosPro uygulamasının temel özelliklerini ve nasıl kullanılacağını açıklar.
+Bu rehber, PosPro mobil uygulamasının temel özelliklerini ve nasıl kullanılacağını açıklar.
+
+**Platform Desteği:** Bu uygulama Android ve iOS platformlarında çalışır.
 
 ---
 

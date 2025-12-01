@@ -1,16 +1,18 @@
-# 🏪 PosPro TR - Modern Point of Sale System
+# 🏪 PosPro TR - Modern Mobile Point of Sale System
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Integrated-FFCA28?logo=firebase)](https://firebase.google.com)
 [![Dart](https://img.shields.io/badge/Dart-3.0+-0175C2?logo=dart)](https://dart.dev)
+[![Android](https://img.shields.io/badge/Android-Ready-3DDC84?logo=android)](https://www.android.com)
+[![iOS](https://img.shields.io/badge/iOS-Ready-000000?logo=apple)](https://www.apple.com/ios)
 
-**Enterprise-grade Point of Sale system built with Flutter, designed specifically for Turkish retail businesses.**
+**Enterprise-grade mobile Point of Sale system built with Flutter, designed specifically for Turkish retail businesses.**
 
 ---
 
 ## 🎯 Project Overview
 
-PosPro TR is a comprehensive, **offline-first** POS system combining local SQLite storage with Firebase cloud synchronization. Built with **Clean Architecture** and **MVVM pattern**, it provides a robust, scalable solution for modern retail operations.
+PosPro TR is a comprehensive, **offline-first** mobile POS system combining local SQLite storage with Firebase cloud synchronization. Built with **Clean Architecture** and **MVVM pattern**, it provides a robust, scalable solution for modern retail operations on mobile platforms.
 
 ### ✨ Core Features
 
@@ -52,10 +54,18 @@ PosPro TR is a comprehensive, **offline-first** POS system combining local SQLit
 
 #### 📱 Modern UI/UX
 - Dark theme optimized
-- Responsive design
+- Mobile-responsive design
 - Full Turkish language support
-- Intuitive navigation
+- Touch-optimized interface
 - FlChart data visualization
+- Tablet support
+
+#### 🔌 REST API Support
+- RESTful API client (Dio)
+- ERP integration ready
+- Third-party service connectivity
+- Automatic retry mechanism
+- JWT authentication support
 
 ---
 
@@ -150,14 +160,14 @@ lib/
 
 5. **Run application**
    ```bash
-   # Android
+   # Android (Physical Device or Emulator)
    flutter run -d <device-id>
    
-   # Windows (experimental)
-   flutter run -d windows
+   # iOS (Requires macOS)
+   flutter run -d <ios-device-id>
    
-   # Linux (experimental)
-   flutter run -d linux
+   # List available devices
+   flutter devices
    ```
 
 👉 **[Detailed Quick Start Guide](./docs/QUICK_START.md)**
@@ -234,19 +244,22 @@ lib/
 
 | Platform | Status | Notes |
 |----------|--------|-------|
-| **Android** | ✅ Fully tested | Production-ready |
-| **iOS** | ⚠️ Needs testing | Code compatible |
-| **Windows** | ⚠️ Experimental | Requires testing |
-| **Linux** | ⚠️ Experimental | Requires testing |
-| **Web** | ❌ Limited | Not recommended for POS |
+| **Android** | ✅ Production Ready | Min SDK 23 (Android 6.0+) |
+| **iOS** | ✅ Production Ready | iOS 12.0+ |
+| **Tablets** | ✅ Supported | Android & iOS tablets |
 
-**Note**: Currently optimized and tested for **Android**. Windows and Linux support is available but requires additional testing.
+**Primary Focus**: This application is optimized for **mobile platforms** (Android & iOS) with full offline-first capabilities and cloud synchronization.
 
 ---
 
-## 📱 Screenshots (Android)
+## 📱 Mobile Experience
 
-*Coming soon...*
+### Android & iOS
+- **Native Performance**: Optimized for mobile devices
+- **Offline-First**: Full functionality without internet
+- **Barcode Scanner**: Quick product lookup
+- **Touch Optimized**: Designed for touchscreen use
+- **Portrait & Landscape**: Supports both orientations
 
 ---
 
@@ -285,11 +298,9 @@ This software is proprietary and confidential. Unauthorized copying, modificatio
 
 ## 📞 Contact & Support
 
-- **Project Owner**: [Your Company Name]
-- **Email**: support@pospro.tr
-- **Documentation**: [docs/](./docs/)
+For technical support, bug reports, or feature requests, please contact your system administrator or project maintainer.
 
-For technical support, bug reports, or feature requests, please refer to the internal issue tracking system (Jira).
+**Documentation**: [docs/](./docs/)
 
 ---
 
@@ -307,17 +318,17 @@ For technical support, bug reports, or feature requests, please refer to the int
 - [x] **Real-time Cross-Device Sync**
 
 ### In Progress 🚧
-- [ ] Windows desktop testing
-- [ ] Linux desktop testing
+- [ ] iOS production testing
 - [ ] Comprehensive unit tests
-- [ ] CI/CD pipeline
+- [ ] CI/CD pipeline for mobile builds
+- [ ] App Store & Play Store optimization
 
 ### Planned 📋
-- [ ] Mediator pattern implementation
-- [ ] REST API integration
-- [ ] Multi-language support
-- [ ] Inventory forecasting (Enhanced)
-- [ ] Bluetooth Printer Integration
+- [ ] Multi-language support (English, Arabic)
+- [ ] Enhanced inventory forecasting with AI
+- [ ] Bluetooth thermal printer support
+- [ ] NFC payment integration
+- [ ] Customer loyalty program
 
 ---
 
@@ -334,5 +345,5 @@ Built with ❤️ using **Flutter** and **Firebase**.
 ---
 
 **Version**: 1.0.1+3  
-**Last Updated**: November 30, 2025  
-**Developed by**: [Your Development Team]
+**Last Updated**: December 2025  
+**Platform**: Android & iOS
