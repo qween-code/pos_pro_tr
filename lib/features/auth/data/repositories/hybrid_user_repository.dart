@@ -2,25 +2,28 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:io';
 import '../models/user_model.dart';
 import '../../../../core/database/app_database.dart';
 
 class HybridUserRepository {
   final AppDatabase _localDb;
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _firestore; // Nullable for desktop
   
   StreamSubscription<QuerySnapshot>? _firebaseListener;
 
   HybridUserRepository({
     required AppDatabase localDb,
-    required FirebaseFirestore firestore,
+    FirebaseFirestore? firestore, // Optional
   })  : _localDb = localDb,
         _firestore = firestore {
-    _startFirebaseListener();
+    if (_firestore != null && !Platform.isWindows && !Platform.isLinux) {
+      _startFirebaseListener();
+    }
   }
 
   void _startFirebaseListener() {
-    _firebaseListener = _firestore.collection('users').snapshots().listen(
+    _firebaseListener = _firestore!.collection('users').snapshots().listen(
       (snapshot) async {
         for (final change in snapshot.docChanges) {
           final data = change.doc.data();
@@ -87,7 +90,7 @@ class HybridUserRepository {
         mode: InsertMode.insertOrReplace,
       );
 
-      _firestore.collection('users').doc(user.id).set({
+      _firestore?.collection('users').doc(user.id).set({
         'name': user.name,
         'email': user.email,
         'role': user.role,

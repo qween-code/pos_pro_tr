@@ -1,14 +1,17 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import '../../../../core/utils/error_handler.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/database/database_instance.dart';
 import '../../data/models/order_model.dart';
 import '../../data/repositories/hybrid_order_repository.dart';
-import '../../../products/data/models/product_model.dart';
+import '../../data/repositories/local_order_repository.dart';
 import '../../../products/data/repositories/hybrid_product_repository.dart';
+import '../../../products/data/models/product_model.dart';
 import '../../../products/presentation/controllers/product_controller.dart';
 import '../../../customers/data/models/customer_model.dart';
 import '../../../customers/data/repositories/hybrid_customer_repository.dart';
@@ -18,17 +21,18 @@ import '../../../../core/services/pdf_service.dart';
 import '../../../../core/services/transaction_service.dart';
 import '../../../../core/mediator/app_mediator.dart';
 import '../../../../core/events/app_events.dart';
+import '../../../../core/services/firebase_service.dart';
 
 class OrderController extends GetxController {
-  late final HybridOrderRepository _orderRepository;
-  late final HybridCustomerRepository _customerRepository;
-  late final HybridProductRepository _productRepository;
+  late final dynamic _orderRepository; // Can be HybridOrderRepository or LocalOrderRepository
+  late final dynamic _customerRepository;
+  late final dynamic _productRepository;
   final AppMediator _mediator = AppMediator();
   
   final PdfService _pdfService = PdfService();
 
   final RxList<Order> orders = <Order>[].obs;
-  final RxList<OrderItem> currentOrderItems = <OrderItem>[].obs;
+  final RxList<OrderItem> currentOrderItems = <OrderItem>[ ].obs;
   final RxBool isLoading = false.obs;
   final RxDouble currentTotal = 0.0.obs;
   final RxDouble currentTax = 0.0.obs;
@@ -41,9 +45,27 @@ class OrderController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _orderRepository = HybridOrderRepository(localDb: db, firestore: firestore);
-    _customerRepository = HybridCustomerRepository(localDb: db, firestore: firestore);
-    _productRepository = HybridProductRepository(localDb: db, firestore: firestore);
+    final dbInstance = Get.find<DatabaseInstance>();
+    
+    // Platform-specific repository selection using FirebaseService
+    final firestore = FirebaseService.instance.firestore;
+    
+    if (firestore == null) {
+      // Desktop: Local-only repositories (no Firebase)
+      _orderRepository = LocalOrderRepository(localDb: dbInstance.database);
+      _customerRepository = HybridCustomerRepository(localDb: dbInstance.database, firestore: null);
+      _productRepository = HybridProductRepository(localDb: dbInstance.database, firestore: null);
+      
+      debugPrint('🖥️ Desktop mode: Using local-only repositories');
+    } else {
+      // Mobile/Web: Hybrid repositories (SQLite + Firebase)
+      _orderRepository = HybridOrderRepository(localDb: dbInstance.database, firestore: firestore);
+      _customerRepository = HybridCustomerRepository(localDb: dbInstance.database, firestore: firestore);
+      _productRepository = HybridProductRepository(localDb: dbInstance.database, firestore: firestore);
+      
+      debugPrint('📱 Mobile mode: Using hybrid repositories with Firebase sync');
+    }
+
 
     // Listen for refresh events (e.g. from sync)
     _refreshSubscription = _mediator.on<DashboardRefreshEvent>().listen((event) {

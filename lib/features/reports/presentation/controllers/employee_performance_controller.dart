@@ -6,6 +6,7 @@ import '../../../../core/constants/theme_constants.dart';
 import '../../../orders/data/repositories/hybrid_order_repository.dart';
 import '../../../orders/data/models/order_model.dart' as models;
 import '../../../../core/database/database_instance.dart';
+import '../../../../core/services/firebase_service.dart';
 
 class EmployeePerformanceController extends GetxController {
   late final HybridOrderRepository _orderRepository;
@@ -16,7 +17,7 @@ class EmployeePerformanceController extends GetxController {
     final dbInstance = Get.find<DatabaseInstance>();
     _orderRepository = HybridOrderRepository(
       localDb: dbInstance.database,
-      firestore: FirebaseFirestore.instance,
+      firestore: FirebaseService.instance.firestore,
     );
     loadEmployeePerformance();
   }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -11,23 +12,25 @@ import '../../../../core/events/app_events.dart';
 
 class HybridOrderRepository {
   final db.AppDatabase _localDb;
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _firestore; // Nullable for desktop
   final _uuid = const Uuid();
   
   StreamSubscription<QuerySnapshot>? _firebaseListener;
 
   HybridOrderRepository({
     required db.AppDatabase localDb,
-    required FirebaseFirestore firestore,
+    FirebaseFirestore? firestore, // Optional
   })  : _localDb = localDb,
         _firestore = firestore {
-    _startFirebaseListener();
+    if (_firestore != null && !Platform.isWindows && !Platform.isLinux) {
+      _startFirebaseListener();
+    }
   }
 
   final AppMediator _mediator = AppMediator();
 
   void _startFirebaseListener() {
-    _firebaseListener = _firestore.collection('orders').snapshots().listen(
+    _firebaseListener = _firestore!.collection('orders').snapshots().listen(
       (snapshot) async {
         bool hasChanges = false;
         for (final change in snapshot.docChanges) {
@@ -141,15 +144,16 @@ class HybridOrderRepository {
   }
 
   Future<void> updateOrderStatus(String orderId, String status) async {
-    // 1. Update Firestore
-    try {
-      await _firestore.collection('orders').doc(orderId).update({
-        'status': status,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      debugPrint('Firestore order update failed: $e');
-      // If offline, we should still update local DB and mark for sync (not implemented here fully)
+    // 1. Update Firestore (if available)
+    if (_firestore != null) {
+      try {
+        await _firestore!.collection('orders').doc(orderId).update({
+          'status': status,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } catch (e) {
+        debugPrint('Firestore order update failed: $e');
+      }
     }
 
     // 2. Update Local DB
@@ -257,8 +261,8 @@ class HybridOrderRepository {
             syncedToFirebase: const Value(false),
           ));
 
-      // 2. Firebase güncelle
-      _firestore.collection('orders').doc(order.id).update({
+      // 2. Firebase güncelle (if available)
+      _firestore?.collection('orders').doc(order.id).update({
         'customerId': order.customerId,
         'orderDate': Timestamp.fromDate(order.orderDate),
         'totalAmount': order.totalAmount,
@@ -291,8 +295,8 @@ class HybridOrderRepository {
             ..where((t) => t.id.equals(id)))
           .go();
 
-      // 2. Firebase sil
-      _firestore.collection('orders').doc(id).delete().catchError((e) {
+      // 2. Firebase sil (if available)
+      _firestore?.collection('orders').doc(id).delete().catchError((e) {
         debugPrint('❌ Firebase silme hatası: $e');
       });
     } catch (e) {
@@ -306,8 +310,9 @@ class HybridOrderRepository {
   }
 
   Future<void> _syncToFirebase(String id, Map<String, dynamic> data) async {
+    if (_firestore == null || Platform.isWindows || Platform.isLinux) return;
     try {
-      await _firestore.collection('orders').doc(id).set({
+      await _firestore!.collection('orders').doc(id).set({
         ...data,
         'orderDate': Timestamp.fromDate(DateTime.parse(data['orderDate'])),
         'createdAt': FieldValue.serverTimestamp(),

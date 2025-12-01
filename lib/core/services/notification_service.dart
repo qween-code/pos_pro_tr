@@ -1,13 +1,18 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:io';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
-  NotificationService._internal();
+  NotificationService._internal() {
+    if (!Platform.isWindows && !Platform.isLinux) {
+      _firebaseMessaging = FirebaseMessaging.instance;
+    }
+  }
 
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  FirebaseMessaging? _firebaseMessaging;
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
@@ -35,28 +40,30 @@ class NotificationService {
     );
 
     // Firebase Cloud Messaging izinleri
-    await _requestPermissions();
+    if (_firebaseMessaging != null) {
+      await _requestPermissions();
+    
+      // FCM token al
+      final token = await _firebaseMessaging!.getToken();
+      debugPrint('FCM Token: $token');
 
-    // FCM token al
-    final token = await _firebaseMessaging.getToken();
-    debugPrint('FCM Token: $token');
+      // Token yenileme dinleyicisi
+      _firebaseMessaging!.onTokenRefresh.listen((newToken) {
+        debugPrint('FCM Token yenilendi: $newToken');
+        // Token'ı backend'e gönderme işlemi burada yapılabilir
+      });
 
-    // Token yenileme dinleyicisi
-    _firebaseMessaging.onTokenRefresh.listen((newToken) {
-      debugPrint('FCM Token yenilendi: $newToken');
-      // Token'ı backend'e gönderme işlemi burada yapılabilir
-    });
+      // Foreground mesajları dinle
+      FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
 
-    // Foreground mesajları dinle
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+      // Background mesajları dinle
+      FirebaseMessaging.onMessageOpenedApp.listen(_handleBackgroundMessage);
 
-    // Background mesajları dinle
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleBackgroundMessage);
-
-    // Uygulama kapalıyken açılan mesajları kontrol et
-    final initialMessage = await _firebaseMessaging.getInitialMessage();
-    if (initialMessage != null) {
-      _handleBackgroundMessage(initialMessage);
+      // Uygulama kapalıyken açılan mesajları kontrol et
+      final initialMessage = await _firebaseMessaging!.getInitialMessage();
+      if (initialMessage != null) {
+        _handleBackgroundMessage(initialMessage);
+      }
     }
 
     _initialized = true;
@@ -64,7 +71,8 @@ class NotificationService {
 
   // İzinleri iste
   Future<void> _requestPermissions() async {
-    final settings = await _firebaseMessaging.requestPermission(
+    if (_firebaseMessaging == null) return;
+    final settings = await _firebaseMessaging!.requestPermission(
       alert: true,
       badge: true,
       sound: true,
@@ -242,18 +250,21 @@ class NotificationService {
 
   // FCM token'ı al
   Future<String?> getToken() async {
-    return await _firebaseMessaging.getToken();
+    if (_firebaseMessaging == null) return null;
+    return await _firebaseMessaging!.getToken();
   }
 
   // Belirli bir konuya abone ol
   Future<void> subscribeToTopic(String topic) async {
-    await _firebaseMessaging.subscribeToTopic(topic);
+    if (_firebaseMessaging == null) return;
+    await _firebaseMessaging!.subscribeToTopic(topic);
     debugPrint('Konuya abone olundu: $topic');
   }
 
   // Konudan abonelikten çık
   Future<void> unsubscribeFromTopic(String topic) async {
-    await _firebaseMessaging.unsubscribeFromTopic(topic);
+    if (_firebaseMessaging == null) return;
+    await _firebaseMessaging!.unsubscribeFromTopic(topic);
     debugPrint('Konudan abonelikten çıkıldı: $topic');
   }
 }

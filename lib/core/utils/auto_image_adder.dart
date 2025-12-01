@@ -1,16 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import 'dart:io';
+
 /// Otomatik resim ekleme scripti
 /// main.dart'ta çağrılacak
 class AutoImageAdder {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore? _firestore;
+
+  AutoImageAdder() {
+    if (!Platform.isWindows && !Platform.isLinux) {
+      _firestore = FirebaseFirestore.instance;
+    }
+  }
 
   Future<void> addImagesToAllProducts() async {
+    if (_firestore == null) return;
     try {
       debugPrint('🖼️ Otomatik resim ekleme başlıyor...');
 
-      final productsSnapshot = await _firestore.collection('products').get();
+      final productsSnapshot = await _firestore!.collection('products').get();
       
       int updated = 0;
       int skipped = 0;

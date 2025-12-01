@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/theme_constants.dart';
+import '../../../../core/services/firebase_service.dart';
 import '../controllers/register_controller.dart';
 
 class OpenRegisterScreen extends StatefulWidget {
@@ -15,7 +16,7 @@ class OpenRegisterScreen extends StatefulWidget {
 class _OpenRegisterScreenState extends State<OpenRegisterScreen> {
   final RegisterController controller = Get.put(RegisterController());
   final TextEditingController amountController = TextEditingController();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore? _firestore = FirebaseService.instance.firestore;
 
   String? selectedCashier;
   String? selectedCashierName;
@@ -31,8 +32,19 @@ class _OpenRegisterScreenState extends State<OpenRegisterScreen> {
   }
 
   Future<void> _loadCashiers() async {
+    if (_firestore == null) {
+      // Desktop offline mode: Use dummy cashiers or empty list
+      setState(() {
+        cashiers = [
+          {'id': 'offline_cashier_1', 'name': 'Kasiyer 1 (Offline)'},
+          {'id': 'offline_cashier_2', 'name': 'Kasiyer 2 (Offline)'},
+        ];
+        isLoadingCashiers = false;
+      });
+      return;
+    }
     try {
-      final snapshot = await _firestore
+      final snapshot = await _firestore!
           .collection('users')
           .where('role', isEqualTo: 'cashier')
           .get();

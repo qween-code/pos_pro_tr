@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -8,21 +9,23 @@ import '../../../../core/database/app_database.dart' as db;
 
 class HybridCustomerRepository {
   final db.AppDatabase _localDb;
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _firestore; // Nullable for desktop
   final _uuid = const Uuid();
   
   StreamSubscription<QuerySnapshot>? _firebaseListener;
 
   HybridCustomerRepository({
     required db.AppDatabase localDb,
-    required FirebaseFirestore firestore,
+    FirebaseFirestore? firestore, // Optional
   })  : _localDb = localDb,
         _firestore = firestore {
-    _startFirebaseListener();
+    if (_firestore != null && !Platform.isWindows && !Platform.isLinux) {
+      _startFirebaseListener();
+    }
   }
 
   void _startFirebaseListener() {
-    _firebaseListener = _firestore.collection('customers').snapshots().listen(
+    _firebaseListener = _firestore!.collection('customers').snapshots().listen(
       (snapshot) async {
         for (final change in snapshot.docChanges) {
           final data = change.doc.data();
@@ -99,7 +102,7 @@ class HybridCustomerRepository {
         ),
       );
 
-      _firestore.collection('customers').doc(id).set({
+      _firestore?.collection('customers').doc(id).set({
         'name': customer.name,
         'phone': customer.phone,
         'email': customer.email,
@@ -169,7 +172,7 @@ class HybridCustomerRepository {
             syncedToFirebase: const Value(false),
           ));
 
-      _firestore.collection('customers').doc(customer.id).update({
+      _firestore?.collection('customers').doc(customer.id).update({
         'name': customer.name,
         'phone': customer.phone,
         'email': customer.email,
@@ -205,7 +208,7 @@ class HybridCustomerRepository {
           ));
 
       // Update Firebase
-      _firestore.collection('customers').doc(id).update({
+      _firestore?.collection('customers').doc(id).update({
         'balance': FieldValue.increment(amount),
       }).then((_) {
          (_localDb.update(_localDb.customers)..where((t) => t.id.equals(id)))
@@ -223,7 +226,7 @@ class HybridCustomerRepository {
     try {
       await (_localDb.delete(_localDb.customers)..where((t) => t.id.equals(id))).go();
 
-      _firestore.collection('customers').doc(id).delete().catchError((e) {
+      _firestore?.collection('customers').doc(id).delete().catchError((e) {
         debugPrint('❌ Firebase silme hatası: $e');
       });
     } catch (e) {

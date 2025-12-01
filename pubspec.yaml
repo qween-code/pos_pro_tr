@@ -14,6 +14,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   get: ^4.6.6  # GetX state management
   sqflite: ^2.3.0  # SQLite veritabanı
+  sqflite_common_ffi: ^2.3.0 # Windows/Linux için gerekli
   path: ^1.8.3  # Dosya yolları için
   intl: ^0.18.1
   fl_chart: ^0.66.0
@@ -43,6 +44,7 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.24
   workmanager: ^0.9.0  # Background task execution - updated to latest
   dio: ^5.9.0
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:

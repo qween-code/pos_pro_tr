@@ -6,6 +6,7 @@ import '../../../customers/data/repositories/hybrid_customer_repository.dart';
 import '../../../products/data/repositories/hybrid_product_repository.dart';
 import '../../../../core/database/database_instance.dart';
 import '../../../../core/database/app_database.dart' as db;
+import '../../../../core/services/firebase_service.dart';
 
 class DashboardController extends GetxController {
   late final HybridOrderRepository _orderRepository;
@@ -16,7 +17,7 @@ class DashboardController extends GetxController {
   void onInit() {
     super.onInit();
     final dbInstance = Get.find<DatabaseInstance>();
-    final firestore = FirebaseFirestore.instance;
+    final firestore = FirebaseService.instance.firestore;
     
     _orderRepository = HybridOrderRepository(localDb: dbInstance.database, firestore: firestore);
     _customerRepository = HybridCustomerRepository(localDb: dbInstance.database, firestore: firestore);

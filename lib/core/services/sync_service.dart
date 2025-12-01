@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/foundation.dart';
@@ -8,8 +9,14 @@ import '../../features/customers/data/models/customer_model.dart';
 import '../../features/orders/data/models/order_model.dart' as pos_order;
 
 class SyncService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore? _firestore;
   final DatabaseService _dbService = DatabaseService();
+
+  SyncService() {
+    if (!Platform.isWindows && !Platform.isLinux) {
+      _firestore = FirebaseFirestore.instance;
+    }
+  }
 
   // Çevrimdışı değişiklikleri takip etmek için tablo
   static const String _syncQueueTable = 'sync_queue';
@@ -126,6 +133,7 @@ class SyncService {
 
   // Online olduğunda tüm bekleyen değişiklikleri senkronize et
   Future<void> syncAll() async {
+    if (_firestore == null) return;
     try {
       final db = await _dbService.database;
       await _initSyncQueue();
@@ -159,19 +167,19 @@ class SyncService {
             case 'create':
               // Firestore'a ekle
               if (documentId.isEmpty) {
-                await _firestore.collection(collection).add(dataMap ?? {});
+                await _firestore!.collection(collection).add(dataMap ?? {});
               } else {
-                await _firestore.collection(collection).doc(documentId).set(dataMap ?? {});
+                await _firestore!.collection(collection).doc(documentId).set(dataMap ?? {});
               }
               break;
             case 'update':
               if (documentId.isNotEmpty && dataMap != null) {
-                await _firestore.collection(collection).doc(documentId).update(dataMap);
+                await _firestore!.collection(collection).doc(documentId).update(dataMap);
               }
               break;
             case 'delete':
               if (documentId.isNotEmpty) {
-                await _firestore.collection(collection).doc(documentId).delete();
+                await _firestore!.collection(collection).doc(documentId).delete();
               }
               break;
           }
@@ -195,11 +203,12 @@ class SyncService {
 
   // Firestore'dan SQLite'a veri çekme (ilk yükleme)
   Future<void> syncFromFirestore() async {
+    if (_firestore == null) return;
     try {
       final db = await _dbService.database;
 
       // Ürünleri senkronize et
-      final productsSnapshot = await _firestore.collection('products').get();
+      final productsSnapshot = await _firestore!.collection('products').get();
       for (var doc in productsSnapshot.docs) {
         final data = doc.data();
         await db.insert(
@@ -218,7 +227,7 @@ class SyncService {
       }
 
       // Müşterileri senkronize et
-      final customersSnapshot = await _firestore.collection('customers').get();
+      final customersSnapshot = await _firestore!.collection('customers').get();
       for (var doc in customersSnapshot.docs) {
         final data = doc.data();
         await db.insert(
@@ -242,8 +251,9 @@ class SyncService {
   // İnternet bağlantısını kontrol et (deprecated - ConnectivityService kullanın)
   @Deprecated('Use ConnectivityService.checkConnectivity() instead')
   Future<bool> isOnline() async {
+    if (_firestore == null) return false;
     try {
-      await _firestore.collection('_health').limit(1).get();
+      await _firestore!.collection('_health').limit(1).get();
       return true;
     } catch (e) {
       return false;

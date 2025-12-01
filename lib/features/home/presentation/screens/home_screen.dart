@@ -18,7 +18,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
   

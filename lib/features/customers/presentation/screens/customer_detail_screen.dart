@@ -9,6 +9,7 @@ import '../../../register/presentation/controllers/register_controller.dart';
 import '../../../orders/data/repositories/hybrid_order_repository.dart';
 import '../../../orders/data/models/order_model.dart' as models;
 import '../../../../core/database/database_instance.dart';
+import '../../../../core/services/firebase_service.dart';
 
 class CustomerDetailScreen extends StatelessWidget {
   final Customer customer;
@@ -19,7 +20,7 @@ class CustomerDetailScreen extends StatelessWidget {
     final dbInstance = Get.find<DatabaseInstance>();
     _orderRepository = HybridOrderRepository(
       localDb: dbInstance.database,
-      firestore: FirebaseFirestore.instance,
+      firestore: FirebaseService.instance.firestore,
     );
   }
 

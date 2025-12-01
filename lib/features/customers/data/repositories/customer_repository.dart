@@ -1,17 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/customer_model.dart';
+import '../../../../core/services/firebase_service.dart';
 
 class CustomerRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore? _firestore = FirebaseService.instance.firestore;
   final String _collectionName = 'customers';
 
   Future<String> insertCustomer(Customer customer) async {
-    final docRef = await _firestore.collection(_collectionName).add(customer.toJson());
+    if (_firestore == null) return 'offline_customer_${DateTime.now().millisecondsSinceEpoch}';
+    final docRef = await _firestore!.collection(_collectionName).add(customer.toJson());
     return docRef.id;
   }
 
   Future<List<Customer>> getCustomers({int limit = 100}) async {
-    final querySnapshot = await _firestore.collection(_collectionName)
+    if (_firestore == null) return [];
+    final querySnapshot = await _firestore!.collection(_collectionName)
       .limit(limit)
       .get();
     return querySnapshot.docs.map((doc) {
@@ -26,7 +29,8 @@ class CustomerRepository {
     int limit = 50,
     DocumentSnapshot? startAfter,
   }) async {
-    Query query = _firestore.collection(_collectionName).limit(limit);
+    if (_firestore == null) return [];
+    Query query = _firestore!.collection(_collectionName).limit(limit);
     
     if (startAfter != null) {
       query = query.startAfterDocument(startAfter);
@@ -41,16 +45,19 @@ class CustomerRepository {
   }
 
   Future<void> updateCustomer(Customer customer) async {
+    if (_firestore == null) return;
     if (customer.id == null) throw Exception('Müşteri ID bulunamadı');
-    await _firestore.collection(_collectionName).doc(customer.id.toString()).update(customer.toJson());
+    await _firestore!.collection(_collectionName).doc(customer.id.toString()).update(customer.toJson());
   }
 
   Future<void> deleteCustomer(String id) async {
-    await _firestore.collection(_collectionName).doc(id).delete();
+    if (_firestore == null) return;
+    await _firestore!.collection(_collectionName).doc(id).delete();
   }
 
   Future<Customer?> getCustomerById(String id) async {
-    final doc = await _firestore.collection(_collectionName).doc(id).get();
+    if (_firestore == null) return null;
+    final doc = await _firestore!.collection(_collectionName).doc(id).get();
     if (doc.exists && doc.data() != null) {
       final data = doc.data()!;
       data['id'] = doc.id;
@@ -60,7 +67,8 @@ class CustomerRepository {
   }
 
   Future<List<Customer>> searchCustomers(String query, {int limit = 50}) async {
-    final querySnapshot = await _firestore.collection(_collectionName)
+    if (_firestore == null) return [];
+    final querySnapshot = await _firestore!.collection(_collectionName)
       .where('name', isGreaterThanOrEqualTo: query)
       .where('name', isLessThanOrEqualTo: '$query\uf8ff')
       .limit(limit)
@@ -74,7 +82,8 @@ class CustomerRepository {
   }
 
   Future<List<Customer>> getCustomersByName(String name) async {
-    final querySnapshot = await _firestore.collection(_collectionName)
+    if (_firestore == null) return [];
+    final querySnapshot = await _firestore!.collection(_collectionName)
       .where('name', isEqualTo: name)
       .get();
 
@@ -85,7 +94,8 @@ class CustomerRepository {
     }).toList();
   }
   Future<void> updateBalance(String customerId, double amount) async {
-    await _firestore.collection(_collectionName).doc(customerId).update({
+    if (_firestore == null) return;
+    await _firestore!.collection(_collectionName).doc(customerId).update({
       'balance': FieldValue.increment(amount),
     });
   }

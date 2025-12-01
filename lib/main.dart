@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,6 +17,7 @@ import 'core/services/stock_monitor_service.dart';
 import 'core/services/background_sync_service.dart';
 import 'core/utils/error_handler.dart';
 import 'core/utils/data_seeder.dart';
+import 'core/utils/local_data_seeder.dart';
 
 import 'core/utils/auto_image_adder.dart';
 import 'firebase_options.dart';
@@ -37,6 +40,12 @@ Future<void> main() async {
   // Flutter binding'i başlat
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Desktop için sqflite başlat
+  if (Platform.isWindows || Platform.isLinux) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
   // Global hata yönetimini başlat
   ErrorHandler.setupGlobalErrorHandler();
 
@@ -45,20 +54,25 @@ Future<void> main() async {
 
   try {
     // **ÖNEMLİ: Firebase'i başlat - uygulama açılmadan önce**
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    debugPrint('✅ Firebase başlatıldı');
+    // Windows/Linux'ta Firebase desteği sınırlı olduğu için sadece diğer platformlarda başlat
+    if (!Platform.isWindows && !Platform.isLinux) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      debugPrint('✅ Firebase başlatıldı');
 
-    // Firestore offline persistence'ı AÇ (Hız ve offline kullanım için)
-    // Cache boyutunu 100MB ile sınırla (Doğru yönetim)
-    FirebaseFirestore.instance.settings = const Settings(
-      persistenceEnabled: true,
-      cacheSizeBytes: 100 * 1024 * 1024, // 100 MB
-    );
+      // Firestore offline persistence'ı AÇ (Hız ve offline kullanım için)
+      // Cache boyutunu 100MB ile sınırla (Doğru yönetim)
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: 100 * 1024 * 1024, // 100 MB
+      );
 
-    // Background message handler'ı kaydet
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      // Background message handler'ı kaydet
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    } else {
+      debugPrint('⚠️ Windows/Linux platformu tespit edildi. Firebase devre dışı bırakıldı (Offline Mod).');
+    }
 
     // State servisini başlat
     await initServices();
@@ -92,6 +106,12 @@ void _initializeServicesAsync() {
   }).catchError((e) {
     debugPrint('❌ SQLite başlatma hatası: $e');
   });
+
+  // Windows/Linux için bazı servisleri atla
+  if (Platform.isWindows || Platform.isLinux) {
+    debugPrint('ℹ️ Masaüstü modunda bazı servisler (Bildirim, Sync) devre dışı.');
+    return;
+  }
 
   // Bildirim servisini başlat (async)
   NotificationService().initialize().then((_) {
@@ -138,6 +158,24 @@ void _seedDataOnFirstRun() async {
     // 3 saniye bekle
     await Future.delayed(const Duration(seconds: 3));
     
+    // Desktop (Windows/Linux) için Local Seeding
+    if (Platform.isWindows || Platform.isLinux) {
+      debugPrint('🖥️ Desktop platformu için yerel veri kontrolü yapılıyor...');
+      
+      // Veri var mı kontrol et (basitçe ürünlere bak)
+      // Not: Bu noktada Get.find<DatabaseInstance>() zaten initServices içinde çağrılmış olmalı
+      // Ancak emin olmak için try-catch bloğu içinde
+      try {
+        final localSeeder = LocalDataSeeder();
+        // seedAll kendi içinde veri kontrolü yapıyor (boşsa ekliyor)
+        await localSeeder.seedAll();
+      } catch (e) {
+        debugPrint('❌ Local seeding hatası: $e');
+      }
+      return;
+    }
+
+    // Mobil (Firebase) Seeding
     final firestore = FirebaseFirestore.instance;
     
     // Kasiyer sayısını ve veri kalitesini kontrol et

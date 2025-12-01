@@ -1,17 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/product_model.dart';
+import '../../../../core/services/firebase_service.dart';
 
 class ProductRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore? _firestore = FirebaseService.instance.firestore;
   final String _collectionName = 'products';
 
   Future<String> insertProduct(Product product) async {
-    final docRef = await _firestore.collection(_collectionName).add(product.toJson());
+    if (_firestore == null) return 'offline_product_${DateTime.now().millisecondsSinceEpoch}';
+    final docRef = await _firestore!.collection(_collectionName).add(product.toJson());
     return docRef.id;
   }
 
   Future<List<Product>> getProducts({int limit = 1000}) async {
-    final querySnapshot = await _firestore.collection(_collectionName)
+    if (_firestore == null) return [];
+    final querySnapshot = await _firestore!.collection(_collectionName)
       .limit(limit)
       .get();
     return querySnapshot.docs.map((doc) {
@@ -26,7 +29,8 @@ class ProductRepository {
     int limit = 50,
     DocumentSnapshot? startAfter,
   }) async {
-    Query query = _firestore.collection(_collectionName).limit(limit);
+    if (_firestore == null) return [];
+    Query query = _firestore!.collection(_collectionName).limit(limit);
     
     if (startAfter != null) {
       query = query.startAfterDocument(startAfter);
@@ -41,16 +45,19 @@ class ProductRepository {
   }
 
   Future<void> updateProduct(Product product) async {
+    if (_firestore == null) return;
     if (product.id == null) throw Exception('Ürün ID bulunamadı');
-    await _firestore.collection(_collectionName).doc(product.id.toString()).update(product.toJson());
+    await _firestore!.collection(_collectionName).doc(product.id.toString()).update(product.toJson());
   }
 
   Future<void> deleteProduct(String id) async {
-    await _firestore.collection(_collectionName).doc(id).delete();
+    if (_firestore == null) return;
+    await _firestore!.collection(_collectionName).doc(id).delete();
   }
 
   Future<Product?> getProductById(String id) async {
-    final doc = await _firestore.collection(_collectionName).doc(id).get();
+    if (_firestore == null) return null;
+    final doc = await _firestore!.collection(_collectionName).doc(id).get();
     if (doc.exists && doc.data() != null) {
       final data = doc.data()!;
       data['id'] = doc.id;
@@ -60,7 +67,8 @@ class ProductRepository {
   }
 
   Future<List<Product>> searchProducts(String query, {int limit = 50}) async {
-    final querySnapshot = await _firestore.collection(_collectionName)
+    if (_firestore == null) return [];
+    final querySnapshot = await _firestore!.collection(_collectionName)
       .where('name', isGreaterThanOrEqualTo: query)
       .where('name', isLessThanOrEqualTo: '$query\uf8ff')
       .limit(limit)
@@ -74,7 +82,8 @@ class ProductRepository {
   }
 
   Future<List<Product>> getProductsByCategory(String category) async {
-    final querySnapshot = await _firestore.collection(_collectionName)
+    if (_firestore == null) return [];
+    final querySnapshot = await _firestore!.collection(_collectionName)
       .where('category', isEqualTo: category)
       .get();
 
@@ -86,7 +95,8 @@ class ProductRepository {
   }
 
   Future<List<Product>> getLowStockProducts(int threshold) async {
-    final querySnapshot = await _firestore.collection(_collectionName)
+    if (_firestore == null) return [];
+    final querySnapshot = await _firestore!.collection(_collectionName)
       .where('stock', isLessThanOrEqualTo: threshold)
       .get();
 

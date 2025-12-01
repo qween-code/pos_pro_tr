@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'core/constants/theme_constants.dart';
 import 'core/widgets/splash_screen.dart';
@@ -32,8 +34,49 @@ class PosProApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.dark,
       debugShowCheckedModeBanner: false,
-      defaultTransition: Transition.noTransition,
+      defaultTransition: Transition.cupertino,
       builder: (context, child) {
+        // Desktop için keyboard shortcuts ekle
+        if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+          return Shortcuts(
+            shortcuts: {
+              LogicalKeySet(LogicalKeyboardKey.alt, LogicalKeyboardKey.arrowLeft): const _BackIntent(),
+              LogicalKeySet(LogicalKeyboardKey.alt, LogicalKeyboardKey.arrowRight): const _ForwardIntent(),
+              LogicalKeySet(LogicalKeyboardKey.alt, LogicalKeyboardKey.keyH): const _HomeIntent(),
+            },
+            child: Actions(
+              actions: {
+                _BackIntent: CallbackAction<_BackIntent>(
+                  onInvoke: (_) {
+                    if (Get.previousRoute != '') {
+                      Get.back();
+                    }
+                    return null;
+                  },
+                ),
+                _ForwardIntent: CallbackAction<_ForwardIntent>(
+                  onInvoke: (_) {
+                    // GetX doesn't support forward, but we show a message
+                    Get.snackbar(
+                      'Bilgi',
+                      'İleri gitme özelliği şu anda kullanılamıyor',
+                      snackPosition: SnackPosition.BOTTOM,
+                      duration: const Duration(seconds: 1),
+                    );
+                    return null;
+                  },
+                ),
+                _HomeIntent: CallbackAction<_HomeIntent>(
+                  onInvoke: (_) {
+                    Get.offAllNamed('/home');
+                    return null;
+                  },
+                ),
+              },
+              child: child!,
+            ),
+          );
+        }
         return child!;
       },
       initialRoute: '/splash',
@@ -64,4 +107,17 @@ class PosProApp extends StatelessWidget {
       unknownRoute: GetPage(name: '/login', page: () => const LoginScreen()),
     );
   }
+}
+
+// Keyboard shortcut intents
+class _BackIntent extends Intent {
+  const _BackIntent();
+}
+
+class _ForwardIntent extends Intent {
+  const _ForwardIntent();
+}
+
+class _HomeIntent extends Intent {
+  const _HomeIntent();
 }

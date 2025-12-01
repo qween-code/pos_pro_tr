@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -13,7 +14,7 @@ import '../../../../core/database/app_database.dart' as db;
 /// Senkronizasyon: Firebase Listener -> SQLite
 class HybridProductRepository {
   final db.AppDatabase _localDb;
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _firestore; // Nullable for desktop
   final _uuid = const Uuid();
   
   // Firebase değişikliklerini dinlemek için
@@ -21,15 +22,17 @@ class HybridProductRepository {
 
   HybridProductRepository({
     required db.AppDatabase localDb,
-    required FirebaseFirestore firestore,
+    FirebaseFirestore? firestore, // Optional
   })  : _localDb = localDb,
         _firestore = firestore {
-    _startFirebaseListener();
+    if (_firestore != null && !Platform.isWindows && !Platform.isLinux) {
+      _startFirebaseListener();
+    }
   }
 
   /// Firebase'deki değişiklikleri dinle ve yerel veritabanını güncelle
   void _startFirebaseListener() {
-    _firebaseListener = _firestore.collection('products').snapshots().listen(
+    _firebaseListener = _firestore!.collection('products').snapshots().listen(
       (snapshot) async {
         for (final change in snapshot.docChanges) {
           final data = change.doc.data();
@@ -114,7 +117,7 @@ class HybridProductRepository {
       );
 
       // 2. Firebase'e gönder (Arka planda)
-      _firestore.collection('products').doc(id).set({
+      _firestore?.collection('products').doc(id).set({
         'name': product.name,
         'price': product.price,
         'stock': product.stock,
@@ -210,7 +213,7 @@ class HybridProductRepository {
           ));
 
       // 2. Firebase güncelle
-      _firestore.collection('products').doc(product.id).update({
+      _firestore?.collection('products').doc(product.id).update({
         'name': product.name,
         'price': product.price,
         'stock': product.stock,
@@ -242,7 +245,7 @@ class HybridProductRepository {
           .go();
 
       // 2. Firebase sil
-      _firestore.collection('products').doc(id).delete().catchError((e) {
+      _firestore?.collection('products').doc(id).delete().catchError((e) {
         debugPrint('❌ Firebase silme hatası: $e');
       });
     } catch (e) {

@@ -5,25 +5,45 @@ import '../../features/auth/data/models/user_model.dart';
 import '../../core/database/database_instance.dart';
 import '../../features/auth/data/repositories/hybrid_user_repository.dart';
 
+import 'dart:io';
+
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseAuth? _auth;
+  FirebaseFirestore? _firestore;
   late final HybridUserRepository _userRepository;
 
   AuthService() {
+    if (!Platform.isWindows && !Platform.isLinux) {
+      _auth = FirebaseAuth.instance;
+      _firestore = FirebaseFirestore.instance;
+    }
     _userRepository = HybridUserRepository(localDb: db, firestore: _firestore);
   }
 
   // Mevcut kullanıcıyı al
-  User? get currentUser => _auth.currentUser;
+  User? get currentUser => _auth?.currentUser;
 
   // Kullanıcı durumu stream'i
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
+  Stream<User?> get authStateChanges => _auth?.authStateChanges() ?? Stream.value(null);
 
   // Email ve şifre ile giriş yapma
   Future<UserModel> signInWithEmailAndPassword(String email, String password) async {
+    // Desktop Offline Login Bypass
+    if (Platform.isWindows || Platform.isLinux) {
+      // Offline modda şimdilik her zaman admin olarak giriş yapılıyor
+      // İleride yerel şifre kontrolü eklenebilir
+      final offlineUser = UserModel(
+        id: 'offline_admin',
+        name: 'Offline Admin',
+        email: email,
+        role: 'admin',
+      );
+      await _userRepository.saveUser(offlineUser);
+      return offlineUser;
+    }
+
     try {
-      final UserCredential credential = await _auth.signInWithEmailAndPassword(
+      final UserCredential credential = await _auth!.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -38,7 +58,7 @@ class AuthService {
       
       if (userModel == null) {
         // Localde yoksa Firestore'dan çek
-        final userDoc = await _firestore.collection('users').doc(credential.user!.uid).get();
+        final userDoc = await _firestore!.collection('users').doc(credential.user!.uid).get();
         if (userDoc.exists) {
            final userData = userDoc.data()!;
            userModel = UserModel(
@@ -77,7 +97,8 @@ class AuthService {
     String name,
   ) async {
     try {
-      final UserCredential credential = await _auth.createUserWithEmailAndPassword(
+      if (_auth == null) throw Exception('Firebase Auth başlatılamadı');
+      final UserCredential credential = await _auth!.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -106,6 +127,7 @@ class AuthService {
 
   // Google ile giriş yapma
   Future<UserModel> signInWithGoogle() async {
+    if (_auth == null) throw Exception('Google girişi bu platformda desteklenmiyor');
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn();
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
@@ -120,14 +142,14 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final UserCredential userCredential = await _auth!.signInWithCredential(credential);
       final User user = userCredential.user!;
 
       // Kullanıcıyı kontrol et veya oluştur
       var userModel = await _userRepository.getUser(user.uid);
       
       if (userModel == null) {
-        final userDoc = await _firestore.collection('users').doc(user.uid).get();
+        final userDoc = await _firestore!.collection('users').doc(user.uid).get();
         if (userDoc.exists) {
            final userData = userDoc.data()!;
            userModel = UserModel(
@@ -157,8 +179,9 @@ class AuthService {
 
   // Şifre sıfırlama
   Future<void> resetPassword(String email) async {
+    if (_auth == null) return;
     try {
-      await _auth.sendPasswordResetEmail(email: email);
+      await _auth!.sendPasswordResetEmail(email: email);
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     } catch (e) {
@@ -171,7 +194,7 @@ class AuthService {
     try {
       final googleSignIn = GoogleSignIn();
       await googleSignIn.signOut();
-      await _auth.signOut();
+      await _auth?.signOut();
     } catch (e) {
       throw Exception('Çıkış işlemi sırasında bir hata oluştu: $e');
     }
@@ -185,7 +208,8 @@ class AuthService {
       if (user != null) return user;
 
       // Yoksa Firestore'dan manuel çek (fallback)
-      final userDoc = await _firestore.collection('users').doc(uid).get();
+      if (_firestore == null) return null;
+      final userDoc = await _firestore!.collection('users').doc(uid).get();
       if (userDoc.exists) {
         final userData = userDoc.data()!;
         final userModel = UserModel(
@@ -207,7 +231,7 @@ class AuthService {
   // Kullanıcı bilgilerini güncelle
   Future<void> updateUserData(String uid, Map<String, dynamic> data) async {
     try {
-      await _firestore.collection('users').doc(uid).update(data);
+      await _firestore?.collection('users').doc(uid).update(data);
       // Not: HybridUserRepository listener'ı bunu yakalayıp locale yansıtacaktır.
     } catch (e) {
       throw Exception('Kullanıcı bilgileri güncellenirken bir hata oluştu: $e');

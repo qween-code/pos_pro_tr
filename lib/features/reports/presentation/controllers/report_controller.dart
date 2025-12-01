@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +9,7 @@ import '../../../orders/data/repositories/hybrid_order_repository.dart';
 import '../../../../core/database/database_instance.dart';
 import '../../../../core/mediator/app_mediator.dart';
 import '../../../../core/events/app_events.dart';
+import '../../../../core/services/firebase_service.dart';
 import 'dart:async';
 
 class ReportController extends GetxController {
@@ -19,9 +21,11 @@ class ReportController extends GetxController {
   void onInit() {
     super.onInit();
     final dbInstance = Get.find<DatabaseInstance>();
+    
+    // Use FirebaseService wrapper for platform-safe Firebase access
     _orderRepository = HybridOrderRepository(
       localDb: dbInstance.database,
-      firestore: FirebaseFirestore.instance,
+      firestore: FirebaseService.instance.firestore,
     );
     
     // 📢 MEDIATOR: Subscribe to OrderCompletedEvent for dashboard refresh

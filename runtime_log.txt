@@ -1,0 +1,287 @@
+﻿Launching lib\main.dart on Windows in debug mode...
+Building Windows application...                                 
+flutter : Nuget.exe not found, trying to download or use cach
+ed version.
+At line:1 char:1
++ flutter run -d windows --debug 2>&1 | Tee-Object -FilePath 
+"runtime_l ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Nuget.exe not f 
+   ...cached version.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+lib/core/services/backup_service.dart(1,7): error G077942FA: 
+Variables must be declared using the keywords 'const', 'final
+', 'var' or a type name. [C:\Users\qw\Desktop\PosPro\pos_pro_
+tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(1,7): error G67247B7E: 
+Expected ';' after this. [C:\Users\qw\Desktop\PosPro\pos_pro_
+tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(1,17): error G85CCD27E:
+ Expected a declaration, but got '['. [C:\Users\qw\Desktop\Po
+sPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vc
+xproj]
+lib/core/services/backup_service.dart(1,18): error G85CCD27E:
+ Expected a declaration, but got ''version''. [C:\Users\qw\De
+sktop\PosPro\pos_pro_tr\build\windows\x64\flutter\flutter_ass
+emble.vcxproj]
+lib/core/services/backup_service.dart(1,27): error G85CCD27E:
+ Expected a declaration, but got ']'. [C:\Users\qw\Desktop\Po
+sPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vc
+xproj]
+lib/core/services/backup_service.dart(1,29): error G85CCD27E:
+ Expected a declaration, but got '='. [C:\Users\qw\Desktop\Po
+sPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vc
+xproj]
+lib/core/services/backup_service.dart(1,31): error G85CCD27E:
+ Expected a declaration, but got ''1.0.0''. [C:\Users\qw\Desk
+top\PosPro\pos_pro_tr\build\windows\x64\flutter\flutter_assem
+ble.vcxproj]
+lib/core/services/backup_service.dart(1,38): error G5BADBE1C:
+ Unexpected token ';'. [C:\Users\qw\Desktop\PosPro\pos_pro_tr
+\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(2,7): error G077942FA: 
+Variables must be declared using the keywords 'const', 'final
+', 'var' or a type name. [C:\Users\qw\Desktop\PosPro\pos_pro_
+tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(2,7): error G67247B7E: 
+Expected ';' after this. [C:\Users\qw\Desktop\PosPro\pos_pro_
+tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(2,17): error G85CCD27E:
+ Expected a declaration, but got '['. [C:\Users\qw\Desktop\Po
+sPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vc
+xproj]
+lib/core/services/backup_service.dart(2,18): error G85CCD27E:
+ Expected a declaration, but got ''source''. [C:\Users\qw\Des
+ktop\PosPro\pos_pro_tr\build\windows\x64\flutter\flutter_asse
+mble.vcxproj]
+lib/core/services/backup_service.dart(2,26): error G85CCD27E:
+ Expected a declaration, but got ']'. [C:\Users\qw\Desktop\Po
+sPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vc
+xproj]
+lib/core/services/backup_service.dart(2,28): error G85CCD27E:
+ Expected a declaration, but got '='. [C:\Users\qw\Desktop\Po
+sPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vc
+xproj]
+lib/core/services/backup_service.dart(2,30): error G85CCD27E:
+ Expected a declaration, but got ''sqlite''. [C:\Users\qw\Des
+ktop\PosPro\pos_pro_tr\build\windows\x64\flutter\flutter_asse
+mble.vcxproj]
+lib/core/services/backup_service.dart(2,38): error G5BADBE1C:
+ Unexpected token ';'. [C:\Users\qw\Desktop\PosPro\pos_pro_tr
+\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(4,18): error G182B5C38:
+ 'await' can only be used in 'async' or 'async*' methods. [C:
+\Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flutter
+\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(9,7): error G598FD503: 
+'for' can't be used as an identifier because it's a keyword. 
+[C:\Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flut
+ter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(9,22): error G67247B7E:
+ Expected ')' before this. [C:\Users\qw\Desktop\PosPro\pos_pr
+o_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(22,25): error G182B5C38
+: 'await' can only be used in 'async' or 'async*' methods. [C
+:\Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flutte
+r\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(26,13): error G3763787C
+: A function declaration needs an explicit list of parameters
+. [C:\Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\fl
+utter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(26,17): error G67247B7E
+: Expected '{' before this. [C:\Users\qw\Desktop\PosPro\pos_p
+ro_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(26,17): error G85CCD27E
+: Expected a declaration, but got '.'. [C:\Users\qw\Desktop\P
+osPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.v
+cxproj]
+lib/core/services/backup_service.dart(26,43): error GE5739AE2
+: Expected a function body or '=>'. [C:\Users\qw\Desktop\PosP
+ro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vcxp
+roj]
+lib/core/services/backup_service.dart(28,18): error G25387D61
+: Expected an identifier, but got ''Yedekleme tamamland─▒: '.
+ [C:\Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flu
+tter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(28,41): error G67247B7E
+: Expected ')' before this. [C:\Users\qw\Desktop\PosPro\pos_p
+ro_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(28,55): error GE5739AE2
+: Expected a function body or '=>'. [C:\Users\qw\Desktop\PosP
+ro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vcxp
+roj]
+lib/core/services/backup_service.dart(29,7): error G077942FA:
+ Variables must be declared using the keywords 'const', 'fina
+l', 'var' or a type name. [C:\Users\qw\Desktop\PosPro\pos_pro
+_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(29,7): error GDBCCDD98:
+ 'return' can't be used as an identifier because it's a keywo
+rd. [C:\Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\
+flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(29,7): error G67247B7E:
+ Expected ';' after this. [C:\Users\qw\Desktop\PosPro\pos_pro
+_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(29,14): error G3763787C
+: A function declaration needs an explicit list of parameters
+. [C:\Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\fl
+utter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(29,18): error G67247B7E
+: Expected '{' before this. [C:\Users\qw\Desktop\PosPro\pos_p
+ro_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(29,18): error G85CCD27E
+: Expected a declaration, but got '.'. [C:\Users\qw\Desktop\P
+osPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.v
+cxproj]
+lib/core/services/backup_service.dart(29,19): error G077942FA
+: Variables must be declared using the keywords 'const', 'fin
+al', 'var' or a type name. [C:\Users\qw\Desktop\PosPro\pos_pr
+o_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(30,5): error G85CCD27E:
+ Expected a declaration, but got '}'. [C:\Users\qw\Desktop\Po
+sPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vc
+xproj]
+lib/core/services/backup_service.dart(30,7): error GC606EFBD:
+ 'catch' can't be used as an identifier because it's a keywor
+d. [C:\Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\f
+lutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(34,3): error G85CCD27E:
+ Expected a declaration, but got '}'. [C:\Users\qw\Desktop\Po
+sPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vc
+xproj]
+lib/core/services/backup_service.dart(126,1): error G85CCD27E
+: Expected a declaration, but got '}'. [C:\Users\qw\Desktop\P
+osPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.v
+cxproj]
+lib/core/services/backup_service.dart(2,7): error G9848FA7C: 
+'backupData' is already declared in this scope. [C:\Users\qw\
+Desktop\PosPro\pos_pro_tr\build\windows\x64\flutter\flutter_a
+ssemble.vcxproj]
+lib/core/services/backup_service.dart(26,13): error GCE158C7C
+: 'file' is already declared in this scope. [C:\Users\qw\Desk
+top\PosPro\pos_pro_tr\build\windows\x64\flutter\flutter_assem
+ble.vcxproj]
+lib/core/services/backup_service.dart(29,14): error GCE158C7C
+: 'file' is already declared in this scope. [C:\Users\qw\Desk
+top\PosPro\pos_pro_tr\build\windows\x64\flutter\flutter_assem
+ble.vcxproj]
+lib/core/services/backup_service.dart(26,7): error G5FE39F1E:
+ Type 'await' not found. [C:\Users\qw\Desktop\PosPro\pos_pro_
+tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(4,24): error GC9768DF9:
+ Undefined name '_databaseService'. [C:\Users\qw\Desktop\PosP
+ro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vcxp
+roj]
+lib/core/services/backup_service.dart(19,32): error GF7CA4DBF
+: Couldn't find constructor 'JsonEncoder.withIndent'. [C:\Use
+rs\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flutter\flu
+tter_assemble.vcxproj]
+lib/core/services/backup_service.dart(19,69): error G297C951C
+: Can't use 'backupData' because it is declared more than onc
+e. [C:\Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\f
+lutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(22,25): error G5BADBE1C
+: Unexpected token 'await'. [C:\Users\qw\Desktop\PosPro\pos_p
+ro_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(22,31): error G311314CC
+: Method not found: 'getApplicationDocumentsDirectory'. [C:\U
+sers\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flutter\f
+lutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(25,20): error G311314CC
+: Method not found: 'File'. [C:\Users\qw\Desktop\PosPro\pos_p
+ro_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/features/settings/presentation/screens/settings_screen.da
+rt(99,45): error GE5CFE876: The method 'BackupService' isn't 
+defined for the class 'SettingsScreen'. [C:\Users\qw\Desktop\
+PosPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.
+vcxproj]
+lib/features/settings/presentation/screens/settings_screen.da
+rt(150,47): error GE5CFE876: The method 'BackupService' isn't
+ defined for the class 'SettingsScreen'. [C:\Users\qw\Desktop
+\PosPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble
+.vcxproj]
+lib/core/services/backup_service.dart(11,24): error G182B5C38
+: 'await' can only be used in 'async' or 'async*' methods. [C
+:\Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flutte
+r\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(12,11): error G297C951C
+: Can't use 'backupData' because it is declared more than onc
+e. [C:\Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\f
+lutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(14,21): error GA7C8A1BB
+: Too many positional arguments: 0 allowed, but 1 found. [C:\
+Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flutter\
+flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(31,17): error GA7C8A1BB
+: Too many positional arguments: 0 allowed, but 1 found. [C:\
+Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flutter\
+flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(39,21): error G311314CC
+: Method not found: 'XFile'. [C:\Users\qw\Desktop\PosPro\pos_
+pro_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(40,13): error GC9768DF9
+: Undefined name 'Share'. [C:\Users\qw\Desktop\PosPro\pos_pro
+_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(46,17): error GA7C8A1BB
+: Too many positional arguments: 0 allowed, but 1 found. [C:\
+Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flutter\
+flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(55,28): error GC9768DF9
+: Undefined name 'FilePicker'. [C:\Users\qw\Desktop\PosPro\po
+s_pro_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(56,15): error GC9768DF9
+: Undefined name 'FileType'. [C:\Users\qw\Desktop\PosPro\pos_
+pro_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(64,20): error G311314CC
+: Method not found: 'File'. [C:\Users\qw\Desktop\PosPro\pos_p
+ro_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(66,26): error G311314CC
+: Method not found: 'jsonDecode'. [C:\Users\qw\Desktop\PosPro
+\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vcxpro
+j]
+lib/core/services/backup_service.dart(73,24): error GC9768DF9
+: Undefined name '_databaseService'. [C:\Users\qw\Desktop\Pos
+Pro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vcx
+proj]
+lib/core/services/backup_service.dart(87,88): error GC9768DF9
+: Undefined name 'ConflictAlgorithm'. [C:\Users\qw\Desktop\Po
+sPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vc
+xproj]
+lib/core/services/backup_service.dart(93,17): error GA7C8A1BB
+: Too many positional arguments: 0 allowed, but 1 found. [C:\
+Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flutter\
+flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(96,17): error GA7C8A1BB
+: Too many positional arguments: 0 allowed, but 1 found. [C:\
+Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flutter\
+flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(104,24): error GC9768DF
+9: Undefined name '_databaseService'. [C:\Users\qw\Desktop\Po
+sPro\pos_pro_tr\build\windows\x64\flutter\flutter_assemble.vc
+xproj]
+lib/core/services/backup_service.dart(113,32): error GF7CA4DB
+F: Couldn't find constructor 'JsonEncoder.withIndent'. [C:\Us
+ers\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flutter\fl
+utter_assemble.vcxproj]
+lib/core/services/backup_service.dart(114,31): error G311314C
+C: Method not found: 'getApplicationDocumentsDirectory'. [C:\
+Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flutter\
+flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(117,20): error G311314C
+C: Method not found: 'File'. [C:\Users\qw\Desktop\PosPro\pos_
+pro_tr\build\windows\x64\flutter\flutter_assemble.vcxproj]
+lib/core/services/backup_service.dart(122,17): error GA7C8A1B
+B: Too many positional arguments: 0 allowed, but 1 found. [C:
+\Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\flutter
+\flutter_assemble.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTool
+s\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(254,5
+): error MSB8066: 'C:\Users\qw\Desktop\PosPro\pos_pro_tr\buil
+d\windows\x64\CMakeFiles\f8175935ab5ac3df85090f40aa0cc558\flu
+tter_windows.dll.rule;C:\Users\qw\Desktop\PosPro\pos_pro_tr\b
+uild\windows\x64\CMakeFiles\6684d130102cde9a3a32e334bce63c68\
+flutter_assemble.rule' için özel derlemeden 1 koduyla çıkıldı
+. [C:\Users\qw\Desktop\PosPro\pos_pro_tr\build\windows\x64\fl
+utter\flutter_assemble.vcxproj]
+Building Windows application...                                    17,3s
+Error: Build process failed.

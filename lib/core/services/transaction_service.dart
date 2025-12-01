@@ -2,20 +2,29 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../features/orders/data/models/order_model.dart' as model;
 import '../../features/products/data/models/product_model.dart';
 
+import 'dart:io';
+
 class TransactionService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore? _firestore;
+
+  TransactionService() {
+    if (!Platform.isWindows && !Platform.isLinux) {
+      _firestore = FirebaseFirestore.instance;
+    }
+  }
 
   Future<void> processRefund({
     required model.Order order,
     required Map<String, int> refundQuantities,
     required List<model.OrderItem> orderItems,
   }) async {
-    return _firestore.runTransaction((transaction) async {
+    if (_firestore == null) return;
+    return _firestore!.runTransaction((transaction) async {
       // 1. Ürün Stoklarını Güncelle (Okuma ve Yazma)
       for (var item in orderItems) {
         final quantityToRefund = refundQuantities[item.id] ?? 0;
         if (quantityToRefund > 0 && !item.productId.startsWith('manual_item')) {
-          final productRef = _firestore.collection('products').doc(item.productId);
+          final productRef = _firestore!.collection('products').doc(item.productId);
           final productSnapshot = await transaction.get(productRef);
 
           if (productSnapshot.exists) {
@@ -26,7 +35,7 @@ class TransactionService {
       }
 
       // 2. Sipariş Durumunu Güncelle
-      final orderRef = _firestore.collection('orders').doc(order.id);
+      final orderRef = _firestore!.collection('orders').doc(order.id);
       
       // Tüm ürünler iade edildi mi kontrolü
       bool allRefunded = true;

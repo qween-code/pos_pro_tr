@@ -76,6 +76,28 @@ PosPro TR is a **production-ready POS system** built to showcase advanced softwa
 
 ## 🏗️ System Architecture
 
+### 📊 Visual Architecture Overview
+
+![PosPro Architecture Overview](docs/images/architecture_overview.png)
+
+*3-layered architecture: Presentation (MVVM) → Data (Hybrid) → Services*
+
+### 🔄 Sales Flow Diagram
+
+![Sales Transaction Flow](docs/images/sales_flow.png)
+
+*Complete sales process from user action to receipt generation*
+
+### 🛠️ Technology Stack
+
+![Technology Stack](docs/images/tech_stack.png)
+
+*Comprehensive tech stack: Flutter, SQLite, Firebase, and more*
+
+> 💡 **İpucu:** Detaylı görsel dokümantasyon için [`docs/INFOGRAPHIC_ARCHITECTURE.md`](docs/INFOGRAPHIC_ARCHITECTURE.md) dosyasına bakın.
+
+---
+
 ### Clean Architecture Layers
 
 ```
@@ -1371,6 +1393,49 @@ class OrderController extends GetxController {
        _mediator = mediator;
 }
 ```
+
+---
+
+## 📚 Dokümantasyon
+
+PosPro TR kapsamlı dokümantasyona sahiptir. İhtiyacınıza göre uygun dokümanı seçin:
+
+### 🎯 Hızlı Navigasyon
+
+| Doküman | Açıklama | Hedef Kitle |
+|---------|----------|-------------|
+| **[📚 INDEX](docs/INDEX.md)** | Tüm dokümanlara hızlı erişim | Herkes |
+| **[🗺️ DOCUMENTATION_MAP](docs/DOCUMENTATION_MAP.md)** | Dokümantasyon haritası ve okuma rotaları | Herkes |
+| **[🎨 INFOGRAPHIC_ARCHITECTURE](docs/INFOGRAPHIC_ARCHITECTURE.md)** | Görsel mimari infografikler | Tüm Ekip |
+| **[📐 ARCHITECTURE](docs/ARCHITECTURE.md)** | Detaylı sistem mimarisi | Geliştiriciler |
+| **[📊 VISUAL_ARCHITECTURE](docs/VISUAL_ARCHITECTURE.md)** | ASCII diyagramlar | Geliştiriciler |
+| **[🛠️ TECH_STACK](docs/TECH_STACK.md)** | Teknoloji listesi | Dev/DevOps |
+| **[📱 KULLANIM_REHBERI](KULLANIM_REHBERI.md)** | Kullanıcı kılavuzu | Son Kullanıcılar |
+| **[🔌 MEDIATOR_AND_API](docs/MEDIATOR_AND_API_IMPLEMENTATION.md)** | Event system ve API | Backend Dev |
+
+### 🚀 Önerilen Başlangıç Rotası
+
+```
+1️⃣ docs/INDEX.md (3 dk)
+   └─ Dokümantasyon yapısını öğren
+   
+2️⃣ docs/INFOGRAPHIC_ARCHITECTURE.md (15 dk)
+   └─ Görsel mimari harita
+   
+3️⃣ docs/ARCHITECTURE.md (30 dk)
+   └─ Detaylı mimari açıklama
+   
+4️⃣ Bu README.md (tam okuma)
+   └─ Kod örnekleri ve pattern'ler
+```
+
+### 📊 İnfografik Görseller
+
+Proje mimarisi ve veri akışlarını görsel olarak anlamak için:
+
+- **[Sistem Mimarisi](docs/images/architecture_overview.png)** - 3 katmanlı mimari
+- **[Satış Akışı](docs/images/sales_flow.png)** - Sipariş işlem akışı
+- **[Teknoloji Yığını](docs/images/tech_stack.png)** - Tech stack görsel
 
 ---
 

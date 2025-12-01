@@ -2,13 +2,22 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../features/products/data/models/product_model.dart';
 
+import 'dart:io';
+
 class BarcodeService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore? _firestore;
+
+  BarcodeService() {
+    if (!Platform.isWindows && !Platform.isLinux) {
+      _firestore = FirebaseFirestore.instance;
+    }
+  }
 
   // Barkod ile ürün arama
   Future<Product?> findProductByBarcode(String barcode) async {
+    if (_firestore == null) return null;
     try {
-      final querySnapshot = await _firestore
+      final querySnapshot = await _firestore!
           .collection('products')
           .where('barcode', isEqualTo: barcode)
           .limit(1)

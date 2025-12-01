@@ -10,6 +10,7 @@ import '../../../orders/data/repositories/hybrid_order_repository.dart';
 import '../../../../core/database/database_instance.dart';
 import '../../../../core/mediator/app_mediator.dart';
 import '../../../../core/events/app_events.dart';
+import '../../../../core/services/firebase_service.dart';
 
 class SalesAnalyticsScreen extends StatefulWidget {
   const SalesAnalyticsScreen({super.key});
@@ -45,7 +46,7 @@ class _SalesAnalyticsScreenState extends State<SalesAnalyticsScreen> {
     final dbInstance = Get.find<DatabaseInstance>();
     _repository = HybridOrderRepository(
       localDb: dbInstance.database,
-      firestore: FirebaseFirestore.instance,
+      firestore: FirebaseService.instance.firestore,
     );
 
     if (Get.arguments != null && Get.arguments is String) {

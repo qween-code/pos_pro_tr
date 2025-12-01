@@ -9,6 +9,7 @@ import '../../../orders/data/repositories/hybrid_order_repository.dart';
 import '../../../../core/database/database_instance.dart';
 import '../../../../core/mediator/app_mediator.dart';
 import '../../../../core/events/app_events.dart';
+import '../../../../core/services/firebase_service.dart';
 
 /// Çalışan Performans Raporu Ekranı
 class CashierPerformanceScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class CashierPerformanceScreen extends StatefulWidget {
 }
 
 class _CashierPerformanceScreenState extends State<CashierPerformanceScreen> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore? _firestore = FirebaseService.instance.firestore;
   late final HybridOrderRepository _repository;
   final AppMediator _mediator = AppMediator();
   StreamSubscription? _refreshSubscription;
@@ -39,7 +40,7 @@ class _CashierPerformanceScreenState extends State<CashierPerformanceScreen> {
     final dbInstance = Get.find<DatabaseInstance>();
     _repository = HybridOrderRepository(
       localDb: dbInstance.database,
-      firestore: FirebaseFirestore.instance,
+      firestore: FirebaseService.instance.firestore,
     );
     
     _refreshSubscription = _mediator.on<DashboardRefreshEvent>().listen((event) {
@@ -75,8 +76,12 @@ class _CashierPerformanceScreenState extends State<CashierPerformanceScreen> {
   }
 
   Future<void> _loadBranches() async {
+    if (_firestore == null) {
+      debugPrint('ℹ️ Firestore not available on desktop - skipping branch loading');
+      return;
+    }
     try {
-      final snapshot = await _firestore
+      final snapshot = await _firestore!
           .collection('users')
           .where('role', isEqualTo: 'cashier')
           .get();
@@ -123,8 +128,21 @@ class _CashierPerformanceScreenState extends State<CashierPerformanceScreen> {
       debugPrint('📅 Tarih aralığı: ${DateFormat('dd/MM/yyyy').format(startDate)} - ${DateFormat('dd/MM/yyyy').format(now)}');
 
       // 2. Kasiyerleri çek (Firestore'dan devam, çünkü kullanıcılar local DB'de olmayabilir)
+      // Desktop'ta Firestore yoksa boş liste kullan
+      if (_firestore == null) {
+        debugPrint('ℹ️ Firestore not available - using empty cashier list');
+        if (mounted) {
+          setState(() {
+            performances = [];
+            totalSales = 0.0;
+            totalOrders = 0;
+          });
+        }
+        return;
+      }
+      
       // Şube filtresini Firestore query'sinde değil, local'de yapalım çünkü mevcut users'larda region field'ı olmayabilir
-      var cashierQuery = _firestore
+      var cashierQuery = _firestore!
           .collection('users')
           .where('role', isEqualTo: 'cashier');
 

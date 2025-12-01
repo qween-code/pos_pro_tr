@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/order_model.dart' as pos_order;
+import '../../../../core/services/firebase_service.dart';
 
 class OrderRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore? _firestore = FirebaseService.instance.firestore;
   final String _orderCollectionName = 'orders';
   final String _orderItemsCollectionName = 'order_items';
 
@@ -10,13 +11,15 @@ class OrderRepository {
     // Sipariş nesnesine öğeleri ekle (denormalizasyon için)
     final orderWithItems = order.copyWith(items: items);
     
+    if (_firestore == null) return 'offline_order_${DateTime.now().millisecondsSinceEpoch}';
+
     // Sipariş oluşturma
-    final orderDocRef = await _firestore.collection(_orderCollectionName).add(orderWithItems.toJson());
+    final orderDocRef = await _firestore!.collection(_orderCollectionName).add(orderWithItems.toJson());
     final orderId = orderDocRef.id;
 
     // Sipariş öğelerini ayrıca oluşturma (geriye dönük uyumluluk ve detaylı sorgular için)
     for (var item in items) {
-      await _firestore.collection(_orderItemsCollectionName).add({
+      await _firestore!.collection(_orderItemsCollectionName).add({
         ...item.toJson(),
         'orderId': orderId,
       });
@@ -26,7 +29,8 @@ class OrderRepository {
   }
 
   Future<List<pos_order.Order>> getOrders({int limit = 2000}) async {
-    final querySnapshot = await _firestore.collection(_orderCollectionName)
+    if (_firestore == null) return [];
+    final querySnapshot = await _firestore!.collection(_orderCollectionName)
       .orderBy('orderDate', descending: true)
       .limit(limit)
       .get();
@@ -42,7 +46,8 @@ class OrderRepository {
     int limit = 50,
     DocumentSnapshot? startAfter,
   }) async {
-    Query query = _firestore.collection(_orderCollectionName)
+    if (_firestore == null) return [];
+    Query query = _firestore!.collection(_orderCollectionName)
       .orderBy('orderDate', descending: true)
       .limit(limit);
     
@@ -59,23 +64,26 @@ class OrderRepository {
   }
 
   Future<void> updateOrderStatus(String orderId, String status) async {
-    await _firestore.collection(_orderCollectionName).doc(orderId).update({
+    if (_firestore == null) return;
+    await _firestore!.collection(_orderCollectionName).doc(orderId).update({
       'status': status,
     });
   }
 
 
   Future<void> updateOrder(pos_order.Order order) async {
+    if (_firestore == null) return;
     if (order.id == null) throw Exception('Sipariş ID bulunamadı');
-    await _firestore.collection(_orderCollectionName).doc(order.id).update(order.toJson());
+    await _firestore!.collection(_orderCollectionName).doc(order.id).update(order.toJson());
   }
 
   Future<void> deleteOrder(String id) async {
+    if (_firestore == null) return;
     // Siparişi sil
-    await _firestore.collection(_orderCollectionName).doc(id).delete();
+    await _firestore!.collection(_orderCollectionName).doc(id).delete();
 
     // İlgili sipariş öğelerini sil
-    final itemsQuery = await _firestore.collection(_orderItemsCollectionName)
+    final itemsQuery = await _firestore!.collection(_orderItemsCollectionName)
       .where('orderId', isEqualTo: id)
       .get();
 
@@ -85,7 +93,8 @@ class OrderRepository {
   }
 
   Future<pos_order.Order?> getOrderById(String id) async {
-    final doc = await _firestore.collection(_orderCollectionName).doc(id).get();
+    if (_firestore == null) return null;
+    final doc = await _firestore!.collection(_orderCollectionName).doc(id).get();
     if (doc.exists && doc.data() != null) {
       final data = doc.data()!;
       data['id'] = doc.id;
@@ -95,7 +104,8 @@ class OrderRepository {
   }
 
   Future<List<pos_order.OrderItem>> getOrderItems(String orderId) async {
-    final querySnapshot = await _firestore.collection(_orderItemsCollectionName)
+    if (_firestore == null) return [];
+    final querySnapshot = await _firestore!.collection(_orderItemsCollectionName)
       .where('orderId', isEqualTo: orderId)
       .get();
 
@@ -107,7 +117,8 @@ class OrderRepository {
   }
 
   Future<List<pos_order.Order>> getOrdersByCustomerId(String customerId) async {
-    final querySnapshot = await _firestore.collection(_orderCollectionName)
+    if (_firestore == null) return [];
+    final querySnapshot = await _firestore!.collection(_orderCollectionName)
       .where('customerId', isEqualTo: customerId)
       .get();
 
@@ -119,7 +130,8 @@ class OrderRepository {
   }
 
   Future<List<pos_order.Order>> getOrdersByDateRange(DateTime startDate, DateTime endDate) async {
-    final querySnapshot = await _firestore.collection(_orderCollectionName)
+    if (_firestore == null) return [];
+    final querySnapshot = await _firestore!.collection(_orderCollectionName)
       .where('orderDate', isGreaterThanOrEqualTo: startDate.toIso8601String())
       .where('orderDate', isLessThanOrEqualTo: endDate.toIso8601String())
       .get();
@@ -132,7 +144,8 @@ class OrderRepository {
   }
 
   Future<List<pos_order.Order>> getOrdersByStatus(String status) async {
-    final querySnapshot = await _firestore.collection(_orderCollectionName)
+    if (_firestore == null) return [];
+    final querySnapshot = await _firestore!.collection(_orderCollectionName)
       .where('status', isEqualTo: status)
       .get();
 
@@ -144,10 +157,11 @@ class OrderRepository {
   }
 
   Future<double> getTotalSalesForDate(DateTime date) async {
+    if (_firestore == null) return 0.0;
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
 
-    final querySnapshot = await _firestore.collection(_orderCollectionName)
+    final querySnapshot = await _firestore!.collection(_orderCollectionName)
       .where('orderDate', isGreaterThanOrEqualTo: startOfDay.toIso8601String())
       .where('orderDate', isLessThanOrEqualTo: endOfDay.toIso8601String())
       .where('status', isEqualTo: 'completed')
