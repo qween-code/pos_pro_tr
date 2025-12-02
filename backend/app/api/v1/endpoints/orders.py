@@ -6,7 +6,6 @@ Sales, Refunds, and Order Processing
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, func, update, desc
-from sqlalchemy.orm import selectinload
 from typing import List, Optional
 from datetime import datetime
 from decimal import Decimal
@@ -69,10 +68,9 @@ async def list_orders(
     count_query = select(func.count(Order.id)).where(and_(*conditions))
     total = (await db.execute(count_query)).scalar()
     
-    # Get orders with relations
+    # Get orders
     query = (
         select(Order)
-        .options(selectinload(Order.items), selectinload(Order.customer))
         .where(and_(*conditions))
         .order_by(desc(Order.created_at))
         .offset(skip)
@@ -104,15 +102,7 @@ async def get_order(
     payload = verify_token(token.credentials)
     org_id = payload.get("organization_id")
     
-    query = (
-        select(Order)
-        .options(
-            selectinload(Order.items).selectinload(OrderItem.product),
-            selectinload(Order.customer),
-            selectinload(Order.payments)
-        )
-        .where(and_(Order.id == order_id, Order.organization_id == org_id))
-    )
+    query = select(Order).where(and_(Order.id == order_id, Order.organization_id == org_id))
     result = await db.execute(query)
     order = result.scalar_one_or_none()
     
@@ -216,13 +206,14 @@ async def create_order(
             
     # 4. Record Payment (if applicable)
     if order_data.payment_method:
+        from app.models.database import PaymentMethod
         payment = Payment(
             organization_id=org_id,
             order_id=new_order.id,
             amount=total_amount,
-            payment_method=order_data.payment_method,
+            method=PaymentMethod.CASH if order_data.payment_method == "cash" else PaymentMethod.CREDIT_CARD,
             status="completed",
-            transaction_id=f"TXN-{new_order.id[:8]}"
+            provider_transaction_id=f"TXN-{new_order.id[:8]}"
         )
         db.add(payment)
         
@@ -254,12 +245,8 @@ async def refund_order(
     payload = verify_token(token.credentials)
     org_id = payload.get("organization_id")
     
-    # Get order with items
-    query = (
-        select(Order)
-        .options(selectinload(Order.items))
-        .where(and_(Order.id == order_id, Order.organization_id == org_id))
-    )
+    # Get order
+    query = select(Order).where(and_(Order.id == order_id, Order.organization_id == org_id))
     result = await db.execute(query)
     order = result.scalar_one_or_none()
     
@@ -268,9 +255,14 @@ async def refund_order(
         
     if order.status == "refunded":
         raise HTTPException(400, "Order already refunded")
+    
+    # Get order items separately
+    items_query = select(OrderItem).where(OrderItem.order_id == order.id)
+    items_result = await db.execute(items_query)
+    order_items = items_result.scalars().all()
         
     # Restore Stock
-    for item in order.items:
+    for item in order_items:
         result = await db.execute(select(Product).where(Product.id == item.product_id))
         product = result.scalar_one_or_none()
         if product and product.track_inventory:
