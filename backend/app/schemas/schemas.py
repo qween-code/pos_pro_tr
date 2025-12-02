@@ -136,6 +136,16 @@ class OrderCreate(BaseModel):
     billing_address: Optional[dict] = None
     
     customer_notes: Optional[str] = None
+    notes: Optional[str] = None
+    payment_method: Optional[str] = None
+
+
+class OrderUpdate(BaseModel):
+    status: Optional[str] = None
+    payment_status: Optional[str] = None
+    notes: Optional[str] = None
+    shipping_address: Optional[dict] = None
+    billing_address: Optional[dict] = None
 
 
 class OrderResponse(BaseModel):
@@ -151,11 +161,20 @@ class OrderResponse(BaseModel):
     total_amount: Decimal
     
     payment_status: str
+    payment_method: Optional[str]
+    notes: Optional[str]
     
     created_at: datetime
     
     class Config:
         from_attributes = True
+
+
+class OrderListResponse(BaseModel):
+    total: int
+    skip: int
+    limit: int
+    items: List[OrderResponse]
 
 
 # ═══════════════════════════════════════════════════════════════

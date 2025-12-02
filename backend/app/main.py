@@ -65,7 +65,7 @@ async def root():
     """Root endpoint - API information"""
     return {
         "app": settings.APP_NAME,
-        "version": settings.APP_VERSION,
+        "version": settings.VERSION,
         "status": "running",
         "docs": "/docs",
         "redoc": "/redoc",
@@ -78,7 +78,7 @@ async def health_check():
     return {
         "status": "healthy",
         "app": settings.APP_NAME,
-        "version": settings.APP_VERSION,
+        "version": settings.VERSION,
     }
 
 # Ping endpoint
