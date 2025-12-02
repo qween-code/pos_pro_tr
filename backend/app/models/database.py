@@ -163,6 +163,54 @@ class User(Base):
 
 
 # ═══════════════════════════════════════════════════════════════
+# SECTION 2.5: POS OPERATIONS
+# ═══════════════════════════════════════════════════════════════
+
+class CashRegisterStatus(str, enum.Enum):
+    OPEN = "open"
+    CLOSED = "closed"
+    BALANCED = "balanced"
+    VARIANCE = "variance"
+
+
+class CashRegister(Base):
+    """Cash Register Sessions - Track cashier shifts"""
+    __tablename__ = "cash_registers"
+    
+    id = Column(String, primary_key=True, default=generate_uuid)
+    organization_id = Column(String, ForeignKey("organizations.id"), index=True)
+    branch_id = Column(String, ForeignKey("branches.id"), index=True)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    
+    # Session Info
+    status = Column(Enum(CashRegisterStatus), default=CashRegisterStatus.OPEN, index=True)
+    opened_at = Column(DateTime, default=datetime.utcnow, index=True)
+    closed_at = Column(DateTime)
+    
+    # Cash Management
+    opening_amount = Column(Numeric(15, 2), default=0)
+    closing_amount = Column(Numeric(15, 2))
+    cash_sales = Column(Numeric(15, 2), default=0)
+    card_sales = Column(Numeric(15, 2), default=0)
+    
+    # Variance Tracking
+    expected_amount = Column(Numeric(15, 2))
+    variance = Column(Numeric(15, 2))
+    
+    # Notes
+    opening_notes = Column(Text)
+    closing_notes = Column(Text)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    __table_args__ = (
+        Index('idx_register_user_status', 'user_id', 'status'),
+        Index('idx_register_opened', 'opened_at'),
+    )
+
+
+# ═══════════════════════════════════════════════════════════════
 # SECTION 3: VENDORS & SUPPLIERS (Marketplace)
 # ═══════════════════════════════════════════════════════════════
 

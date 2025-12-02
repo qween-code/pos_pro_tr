@@ -190,6 +190,15 @@ class CustomerCreate(BaseModel):
     tax_number: Optional[str] = None
 
 
+class CustomerUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    company_name: Optional[str] = None
+    tax_number: Optional[str] = None
+
+
 class CustomerResponse(BaseModel):
     id: str
     first_name: str
@@ -198,12 +207,20 @@ class CustomerResponse(BaseModel):
     phone: Optional[str]
     segment: str
     loyalty_points: int
+    loyalty_tier: str
     total_spent: Decimal
     total_orders: int
     created_at: datetime
     
     class Config:
         from_attributes = True
+
+
+class CustomerListResponse(BaseModel):
+    total: int
+    skip: int
+    limit: int
+    items: List[CustomerResponse]
 
 
 # ═══════════════════════════════════════════════════════════════
