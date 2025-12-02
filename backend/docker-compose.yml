@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # FastAPI Application
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: pospro-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://pospro:pospro123@postgres:5432/pospro_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - CORS_ORIGINS=["http://localhost:3000","http://localhost:8080"]
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./app:/app/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - pospro-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: pospro-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=pospro
+      - POSTGRES_PASSWORD=pospro123
+      - POSTGRES_DB=pospro_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pospro-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pospro"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: pospro-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - pospro-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  #pgAdmin (Optional - Database Management)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pospro-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@pospro.com
+      - PGADMIN_DEFAULT_PASSWORD=admin123
+    depends_on:
+      - postgres
+    networks:
+      - pospro-network
+
+  # Redis Commander (Optional - Redis Management)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: pospro-redis-commander
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    depends_on:
+      - redis
+    networks:
+      - pospro-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  pospro-network:
+    driver: bridge
