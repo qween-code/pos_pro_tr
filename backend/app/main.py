@@ -24,13 +24,11 @@ logger = logging.getLogger(__name__)
 # Create FastAPI app
 app = FastAPI(
     title=settings.APP_NAME,
-    version=settings.APP_VERSION,
+    version=settings.VERSION,
     description="Enterprise-grade REST API for PosPro POS System",
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_url="
-
-/openapi.json",
+    openapi_url="/api/v1/openapi.json",
 )
 
 # CORS Middleware

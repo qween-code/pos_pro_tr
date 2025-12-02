@@ -3,20 +3,22 @@
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from app.db.session import get_db
 from app.models.database import User
 from app.schemas.schemas import UserRegister, UserLogin, Token, UserResponse
 from app.core.security import (
     verify_password, get_password_hash,
-    create_access_token, create_refresh_token
+    create_access_token, create_refresh_token, verify_token
 )
 from app.core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+security = HTTPBearer()
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)

@@ -470,7 +470,7 @@ class Customer(Base):
     tax_number = Column(String(50))
     
     # Loyalty
-   segment = Column(Enum(CustomerSegment), default=CustomerSegment.NEW)
+    segment = Column(Enum(CustomerSegment), default=CustomerSegment.NEW)
     loyalty_points = Column(Integer, default=0)
     lifetime_value = Column(Numeric(15, 2), default=0)
     total_orders = Column(Integer, default=0)
@@ -544,6 +544,7 @@ class Order(Base):
     organization_id = Column(String, ForeignKey("organizations.id"), index=True)
     customer_id = Column(String, ForeignKey("customers.id"), index=True)
     branch_id = Column(String, ForeignKey("branches.id"), index=True)
+    cashier_id = Column(String, ForeignKey("users.id"), index=True)  # Cashier/staff who created order
     
     # Order Info
     order_number = Column(String(50), unique=True, index=True)
@@ -570,6 +571,9 @@ class Order(Base):
     shipping_address = Column(JSON)
     billing_address = Column(JSON)
     
+    # Payment
+    payment_method = Column(String(50))  # cash, card, etc.
+    
     # Status
     status = Column(Enum(OrderStatus), default=OrderStatus.PENDING, index=True)
     payment_status = Column(String(50))  # pending, paid, failed, refunded
@@ -578,6 +582,7 @@ class Order(Base):
     # Notes
     customer_notes = Column(Text)
     internal_notes = Column(Text)
+    notes = Column(Text)  # General notes
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
@@ -669,6 +674,7 @@ class Payment(Base):
     __tablename__ = "payments"
     
     id = Column(String, primary_key=True, default=generate_uuid)
+    organization_id = Column(String, ForeignKey("organizations.id"), index=True)
     order_id = Column(String, ForeignKey("orders.id"), nullable=False, index=True)
     customer_id = Column(String, ForeignKey("customers.id"), index=True)
     

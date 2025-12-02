@@ -6,7 +6,6 @@ Creates all 70+ tables with indexes
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
 from app.models.database import Base
-from app.models.global_features import *  # Import global models
 from app.core.config import settings
 
 async def create_all_tables():
