@@ -128,6 +128,39 @@ async def seed_data():
         await db.flush()
         print(f"✅ Products created: {len(products)}")
         
+        # 6. Create Sample Customers
+        from app.models.database import Customer
+        customers = [
+            Customer(
+                organization_id=org.id,
+                first_name="Ahmet",
+                last_name="Yılmaz",
+                email="ahmet.yilmaz@example.com",
+                phone="+90 555 111 2222",
+                is_active=True
+            ),
+            Customer(
+                organization_id=org.id,
+                first_name="Ayşe",
+                last_name="Demir",
+                email="ayse.demir@example.com",
+                phone="+90 555 222 3333",
+                is_active=True
+            ),
+            Customer(
+                organization_id=org.id,
+                first_name="Mehmet",
+                last_name="Kaya",
+                email="mehmet.kaya@example.com",
+                phone="+90 555 333 4444",
+                is_active=True
+            ),
+        ]
+        for customer in customers:
+            db.add(customer)
+        await db.flush()
+        print(f"✅ Customers created: {len(customers)}")
+        
         await db.commit()
         print("\n✨ Seeding completed successfully!")
         print("\n🔑 Default Credentials:")
