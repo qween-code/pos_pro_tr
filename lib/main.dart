@@ -15,6 +15,7 @@ import 'core/services/connectivity_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/stock_monitor_service.dart';
 import 'core/services/background_sync_service.dart';
+import 'core/services/api_service.dart';
 import 'core/utils/error_handler.dart';
 import 'core/utils/data_seeder.dart';
 import 'core/utils/local_data_seeder.dart';
@@ -226,7 +227,12 @@ Future<void> initServices() async {
     debugPrint('✅ Hibrit Database hazır');
   }
   
-  // 2. State servisini başlat
+  // 2. API Service'i başlat
+  final apiService = ApiService();
+  await apiService.init();
+  debugPrint('✅ API Service hazır');
+  
+  // 3. State servisini başlat
   if (!Get.isRegistered<StateService>()) {
     await Get.putAsync(() => StateService().init());
   }

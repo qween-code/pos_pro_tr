@@ -44,6 +44,7 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.24
   workmanager: ^0.9.0  # Background task execution - updated to latest
   dio: ^5.9.0
+  flutter_secure_storage: ^9.2.0  # Secure token storage
   permission_handler: ^12.0.1
 
 dev_dependencies:
