@@ -22,6 +22,8 @@ import '../../../../core/services/transaction_service.dart';
 import '../../../../core/mediator/app_mediator.dart';
 import '../../../../core/events/app_events.dart';
 import '../../../../core/services/firebase_service.dart';
+import '../screens/order_receipt_screen.dart';
+
 
 class OrderController extends GetxController {
   late final dynamic _orderRepository; // Can be HybridOrderRepository or LocalOrderRepository
@@ -242,8 +244,8 @@ class OrderController extends GetxController {
 
       Get.back(); // Ödeme dialogunu kapat
       
-      // Başarı dialogu göster
-      _showSuccessDialog(newOrder.copyWith(id: orderId));
+      // ✅ FİŞ EKRANINA YÖNLENDİR
+      Get.to(() => OrderReceiptScreen(order: newOrder.copyWith(id: orderId)));
       
     } catch (e) {
       ErrorHandler.handleApiError(e, customMessage: 'Sipariş oluşturulamadı');
