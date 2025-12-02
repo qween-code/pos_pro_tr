@@ -1447,3 +1447,101 @@ Proje mimarisi ve veri akışlarını görsel olarak anlamak için:
 ---
 
 ⭐ **This project showcases production-ready Flutter development with enterprise-grade architecture patterns and cross-platform expertise.** 🚀
+
+---
+
+## 📄 License
+
+**PosPro TR** is released under the **MIT License**.
+
+```
+MIT License
+
+Copyright (c) 2025 PosPro Development Team
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+### 📜 Third-Party Licenses
+
+This project uses the following open-source packages:
+
+- **Flutter SDK** - BSD 3-Clause License
+- **GetX** - MIT License
+- **Drift (SQLite ORM)** - MIT License
+- **Firebase SDK** - Apache License 2.0
+- **Dio** - MIT License
+- **fl_chart** - MIT License
+- **intl** - BSD 3-Clause License
+- **mobile_scanner** - BSD 3-Clause License
+
+Full license texts can be found in their respective package repositories.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+### Development Guidelines
+- Follow the existing code style and architecture patterns
+- Write clean, documented code
+- Add tests for new features
+- Update documentation as needed
+
+---
+
+## 👤 Author
+
+**PosPro Development Team**  
+- GitHub: [@qween-code](https://github.com/qween-code)
+- Project Link: [https://github.com/qween-code/pos_pro_tr](https://github.com/qween-code/pos_pro_tr)
+
+---
+
+## 🙏 Acknowledgments
+
+- Flutter Team for the amazing framework
+- GetX community for state management excellence
+- Drift for powerful SQLite ORM
+- Firebase for backend infrastructure
+- All open-source contributors
+
+---
+
+## 📞 Support
+
+For support, questions, or feature requests:
+- 📧 Open an issue on GitHub
+- 💬 Discussions tab for general questions
+- 🐛 Bug reports via GitHub Issues
+
+---
+
+**Made with ❤️ using Flutter**
+
+[![Flutter](https://img.shields.io/badge/Made%20with-Flutter-02569B?logo=flutter)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Language-Dart-0175C2?logo=dart)](https://dart.dev)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
