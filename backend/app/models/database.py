@@ -520,6 +520,7 @@ class Customer(Base):
     # Loyalty
     segment = Column(Enum(CustomerSegment), default=CustomerSegment.NEW)
     loyalty_points = Column(Integer, default=0)
+    loyalty_tier = Column(String(20), default="bronze")  # bronze, silver, gold, platinum
     lifetime_value = Column(Numeric(15, 2), default=0)
     total_orders = Column(Integer, default=0)
     total_spent = Column(Numeric(15, 2), default=0)
